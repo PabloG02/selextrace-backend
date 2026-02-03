@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: aptasuite
+  
+  config:
+    # This file is mandatory and must be created locally.
+    # It is excluded from Git via .gitignore.
+    import: "file:.secrets.yml"
+
+  mongodb:
+    # This variable must be defined inside .secrets.yml as:
+    # SPRING_MONGODB_URI: mongodb+srv://user:pass@cluster...
+    uri: ${MONGODB_URI}
+
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
