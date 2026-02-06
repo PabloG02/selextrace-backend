@@ -1,6 +1,5 @@
 package pablog.aptasuite.controller;
 
-import org.bson.types.ObjectId;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,7 +12,6 @@ import pablog.aptasuite.dto.ExperimentOverviewDTO;
 import pablog.aptasuite.dto.ExperimentSummaryDTO;
 import pablog.aptasuite.mapper.ConfigurationMapper;
 import pablog.aptasuite.model.ExperimentOverviewDocument;
-import pablog.aptasuite.model.ReaderType;
 import pablog.aptasuite.service.ExperimentProcessor;
 import pablog.aptasuite.repository.ExperimentOverviewRepository;
 import org.springframework.web.server.ResponseStatusException;
@@ -60,15 +58,6 @@ public class ExperimentController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Experiment overview not found in MongoDB"));
     }
 
-    // TODO: delete
-//    @PostMapping
-//    public ExperimentOverviewDTO createExperiment(@RequestBody CreateExperimentDtos.CreateExperimentDto dto, @RequestBody String forwardFile, @RequestBody String reverseFile) throws Exception {
-//        ExperimentConfiguration config = ConfigurationMapper.fromDtoTemp(dto, forwardFile, reverseFile);
-//
-//        ExperimentOverviewDTO overview = experimentProcessor.processData(config);
-//        return persistOverview(overview);
-//    }
-
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ExperimentOverviewDTO createExperiment(
             @RequestPart("data") CreateExperimentDtos.CreateExperimentDto dto,
@@ -97,36 +86,6 @@ public class ExperimentController {
         ExperimentOverviewDTO overview = new ExperimentProcessor().processData(config);
         return persistOverview(overview);
     }
-
-//    @GetMapping("/db/{name}")
-//    public ExperimentOverviewDTO getTestExperiment(@PathVariable String name) throws Exception {
-//        CreateExperimentDtos.ExperimentSequencing sequencing = new CreateExperimentDtos.ExperimentSequencing(
-//                true,
-//                "paired",
-//                ReaderType.FASTQ,
-//                new CreateExperimentDtos.Primers(
-//                        "AGGCCAACTGGATAGCGAA",
-//                "GGGTTAGGGTTAGGGTTAGGG"
-//            ),
-//            new CreateExperimentDtos.ExactLengthRandomizedRegion("exact", 40)
-//        );
-//
-//        CreateExperimentDtos.SelectionCycle cycle = new CreateExperimentDtos.SelectionCycle(
-//                14,
-//                "r14",
-//                false,
-//            false
-//        );
-//
-//        CreateExperimentDtos.CreateExperimentDto dto = new CreateExperimentDtos.CreateExperimentDto(
-//                name,
-//                "des",
-//                sequencing,
-//            List.of(cycle)
-//        );
-//
-//        return createExperiment(dto, "D:\\Users\\Pablo\\Development\\To delete\\aptasuite\\R14-N1763_R1.fastq", "D:\\Users\\Pablo\\Development\\To delete\\aptasuite\\R14-N1763_R2.fastq");
-//    }
 
     private ExperimentOverviewDTO persistOverview(ExperimentOverviewDTO overview) {
         overviewRepository.save(new ExperimentOverviewDocument(overview));

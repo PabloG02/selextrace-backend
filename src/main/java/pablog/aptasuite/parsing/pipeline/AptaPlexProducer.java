@@ -305,7 +305,7 @@ public class AptaPlexProducer implements Runnable {
      * @throws IllegalStateException if reader cannot be instantiated
      */
     private Reader createReader(Path forwardPath, Path reversePath) {
-        Class<?> readerClass = config.AptaplexParser.backend;
+        Class<? extends Reader> readerClass = config.AptaplexParser.backend;
 
         if (readerClass == null) {
             log.error("No reader backend specified in configuration");
@@ -316,7 +316,7 @@ public class AptaPlexProducer implements Runnable {
             log.debug("Instantiating reader: {}", readerClass.getName());
 
             // Instantiate reader with file paths
-            Reader reader = (Reader) readerClass
+            Reader reader = readerClass
                     .getConstructor(Path.class, Path.class)
                     .newInstance(forwardPath, reversePath);
 

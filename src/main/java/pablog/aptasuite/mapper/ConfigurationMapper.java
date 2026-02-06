@@ -15,62 +15,6 @@ import java.util.Map;
 
 public class ConfigurationMapper {
 
-    // TODO: delete
-//    public static ExperimentConfiguration fromDtoTemp(
-//            CreateExperimentDtos.CreateExperimentDto dto,
-//            String forwardFilePath,
-//            String reverseFilePath
-//    ) {
-//        ExperimentConfiguration config = ExperimentConfiguration.defaults();
-//
-//        // --- Experiment ---
-//        config.Experiment.name = dto.name();
-//        config.Experiment.description = dto.description();
-//
-//        // Primers
-//        if (dto.sequencing() != null && dto.sequencing().primers() != null) {
-//            config.Experiment.primer5 = dto.sequencing().primers().fivePrime();
-//            config.Experiment.primer3 = dto.sequencing().primers().threePrime();
-//        }
-//
-//        // Randomized region
-//        if (dto.sequencing() != null && dto.sequencing().randomizedRegion() != null) {
-//            switch (dto.sequencing().randomizedRegion()) {
-//                case CreateExperimentDtos.ExactLengthRandomizedRegion exact ->
-//                        config.Experiment.randomizedRegionSize = String.valueOf(exact.exactLength());
-//                case CreateExperimentDtos.RangeRandomizedRegion range ->
-//                        config.Experiment.randomizedRegionSize = range.min() + "-" + range.max();
-//            }
-//        }
-//
-//        // --- SelectionCycle ---
-//        var cycles = dto.selectionCycles();
-//        if (cycles != null && !cycles.isEmpty()) {
-//            var cycle = cycles.getFirst();
-//            config.SelectionCycle.name = cycle.roundName();
-//            config.SelectionCycle.round = cycle.roundNumber();
-//            config.SelectionCycle.isControlSelection = cycle.isControl();
-//            config.SelectionCycle.isCounterSelection = cycle.isCounterSelection();
-//        }
-//
-//        // --- Sequencing ---
-//        if (dto.sequencing() != null) {
-//            config.AptaplexParser.isPerFile = dto.sequencing().isDemultiplexed();
-//
-//            // The parser backend — assuming only FASTQ supported for now
-//            switch (dto.sequencing().fileFormat()) {
-//                // case FASTA -> config.AptaplexParser.backend = FastaReader.class;
-//                case FASTQ -> config.AptaplexParser.backend = FastqReader.class;
-//            }
-//        }
-//
-//        // Handle uploaded files
-//        config.AptaplexParser.forwardFiles = new String[] { forwardFilePath };
-//        config.AptaplexParser.reverseFiles = new String[] { reverseFilePath };
-//
-//        return config;
-//    }
-
     public static ExperimentConfiguration fromDto(
             CreateExperimentDtos.CreateExperimentDto dto,
             Map<String, MultipartFile> forwardFiles,
