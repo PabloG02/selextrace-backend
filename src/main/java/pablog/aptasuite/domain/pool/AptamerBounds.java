@@ -1,13 +1,23 @@
 package pablog.aptasuite.domain.pool;
 
+import java.io.Serializable;
+
 /**
  * @author Jan Hoinka
  * Simple class representing the start index (inclusive) and
  * end index (exclusive) of the randomized region of an aptamer
  */
-public class AptamerBounds {
+public class AptamerBounds implements Serializable {
 	public int startIndex;
 	public int endIndex;
+
+	/**
+	 * No-argument constructor needed for framework deserialization (e.g., MongoDB).
+	 */
+	protected AptamerBounds() {
+		this.startIndex = 0;
+		this.endIndex = 0;
+	}
 	
 	/**
 	 * Creates a new AptamerBounds instance 

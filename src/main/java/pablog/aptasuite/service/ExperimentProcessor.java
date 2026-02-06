@@ -8,6 +8,7 @@ import pablog.aptasuite.domain.experiment.Experiment;
 import pablog.aptasuite.domain.experiment.ExperimentFactory;
 import pablog.aptasuite.domain.experiment.SelectionCycle;
 import pablog.aptasuite.domain.metadata.AptaPlexProgress;
+import pablog.aptasuite.domain.pool.AptamerBounds;
 import pablog.aptasuite.dto.*;
 import pablog.aptasuite.parsing.AptaPlexParser;
 
@@ -161,6 +162,15 @@ public class ExperimentProcessor {
                 )
                 .collect(Collectors.toMap(Map.Entry::getKey,e -> new String(e.getValue(), StandardCharsets.UTF_8)));
 
+        Map<Integer, AptamerBounds> idToBounds = StreamSupport.stream(
+                        experiment.getPool().bounds_iterator().spliterator(),
+                        false
+                )
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> new AptamerBounds(e.getValue())
+                ));
+
         ExperimentOverviewDTO overview = new ExperimentOverviewDTO(
             experimentDetails,
             getRegionSizes(), // ExperimentOverview-RandomizedRegionSizeDistribution
@@ -168,7 +178,8 @@ public class ExperimentProcessor {
             // Testing purposes
             selectionCycleResponse,
             experiment.getMetadata(),
-            idToAptamer
+            idToAptamer,
+            idToBounds
         );
 
         return overview;
