@@ -6,15 +6,15 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.server.ResponseStatusException;
 import pablog.aptasuite.config.ExperimentConfiguration;
 import pablog.aptasuite.dto.CreateExperimentDtos;
 import pablog.aptasuite.dto.ExperimentOverviewDTO;
 import pablog.aptasuite.dto.ExperimentSummaryDTO;
 import pablog.aptasuite.mapper.ConfigurationMapper;
 import pablog.aptasuite.model.ExperimentOverviewDocument;
-import pablog.aptasuite.service.ExperimentProcessor;
 import pablog.aptasuite.repository.ExperimentOverviewRepository;
-import org.springframework.web.server.ResponseStatusException;
+import pablog.aptasuite.service.ExperimentProcessor;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -27,9 +27,11 @@ import java.util.Map;
 public class ExperimentController {
 
     private final ExperimentOverviewRepository overviewRepository;
+    private final ConfigurationMapper configurationMapper;
 
-    public ExperimentController(ExperimentOverviewRepository overviewRepository) {
+    public ExperimentController(ExperimentOverviewRepository overviewRepository, ConfigurationMapper configurationMapper) {
         this.overviewRepository = overviewRepository;
+        this.configurationMapper = configurationMapper;
     }
 
     @GetMapping
@@ -81,7 +83,7 @@ public class ExperimentController {
             }
         });
 
-        ExperimentConfiguration config = ConfigurationMapper.fromDto(dto, forwardFiles, reverseFiles);
+        ExperimentConfiguration config = configurationMapper.fromDto(dto, forwardFiles, reverseFiles);
 
         ExperimentOverviewDTO overview = new ExperimentProcessor().processData(config);
         return persistOverview(overview);

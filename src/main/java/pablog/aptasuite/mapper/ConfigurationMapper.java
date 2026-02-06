@@ -1,5 +1,7 @@
 package pablog.aptasuite.mapper;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import pablog.aptasuite.config.ExperimentConfiguration;
 import pablog.aptasuite.dto.CreateExperimentDtos;
@@ -13,9 +15,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class ConfigurationMapper {
 
-    public static ExperimentConfiguration fromDto(
+    private final Path baseDir;
+
+    public ConfigurationMapper(@Value("${aptasuite.files.upload-dir}") String baseDir) {
+        this.baseDir = Paths.get(baseDir);
+    }
+
+    public ExperimentConfiguration fromDto(
             CreateExperimentDtos.CreateExperimentDto dto,
             Map<String, MultipartFile> forwardFiles,
             Map<String, MultipartFile> reverseFiles
@@ -97,7 +106,7 @@ public class ConfigurationMapper {
         return config;
     }
 
-    private static String saveMultipartFile(
+    private String saveMultipartFile(
             MultipartFile file,
             String experimentName,
             String cycleName,
@@ -106,9 +115,6 @@ public class ConfigurationMapper {
         if (file == null || file.isEmpty()) {
             return null;
         }
-
-        // 🔧 Define your permanent base directory
-        Path baseDir = Paths.get("D:", "Users", "Pablo", "Development", "To delete", "aptasuite", "files-spring");
 
         // Build subdirectories per experiment and cycle
         Path uploadDir = baseDir.resolve(Paths.get(experimentName, cycleName));
