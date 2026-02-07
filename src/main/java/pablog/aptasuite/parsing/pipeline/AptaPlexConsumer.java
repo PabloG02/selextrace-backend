@@ -259,9 +259,9 @@ public class AptaPlexConsumer implements Runnable {
         }
 
         // Initialize randomized region size constraints
-        this.randomizedRegionSizeExactBound = parseIntegerConfig(config.Experiment.randomizedRegionSize);
-        this.randomizedRegionSizeLowerBound = null; // TODO: Extract from config if available
-        this.randomizedRegionSizeUpperBound = null; // TODO: Extract from config if available
+        this.randomizedRegionSizeExactBound = config.Experiment.randomizedRegionSize;
+        this.randomizedRegionSizeLowerBound = config.AptaplexParser.randomizedRegionSizeLowerBound;
+        this.randomizedRegionSizeUpperBound = config.AptaplexParser.randomizedRegionSizeUpperBound;
 
         // Validate configuration
         validateConfiguration();
@@ -285,24 +285,6 @@ public class AptaPlexConsumer implements Runnable {
         log.info("AptaPlexConsumer initialized: batchMode={}, isPerFile={}, " +
                         "onlyRandomizedRegionInData={}, storeReverseComplement={}, checkReverseComplement={}",
                 batchMode, isPerFile, onlyRandomizedRegionInData, storeReverseComplement, checkReverseComplement);
-    }
-
-    /**
-     * Parses an integer from a string configuration value.
-     *
-     * @param value the string value to parse
-     * @return the parsed integer, or null if parsing fails
-     */
-    private Integer parseIntegerConfig(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (NumberFormatException e) {
-            log.warn("Failed to parse integer configuration value: {}", value);
-            return null;
-        }
     }
 
     /**

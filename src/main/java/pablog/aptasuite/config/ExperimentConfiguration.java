@@ -32,7 +32,7 @@ public class ExperimentConfiguration {
         public String projectPath = null;
         public String primer5 = null;
         public String primer3 = null;
-        public String randomizedRegionSize = null;
+        public Integer randomizedRegionSize = null;
     }
 
     public static class AptamerPoolConfig {
@@ -84,6 +84,8 @@ public class ExperimentConfiguration {
 
     public static class AptaplexParserConfig {
         public Class<? extends Reader> backend = FastqReader.class;
+        public Integer randomizedRegionSizeLowerBound = null;
+        public Integer randomizedRegionSizeUpperBound = null;
         public boolean isPerFile = true;
         public int BlockingQueueSize = 5000;
         public int PairedEndMinOverlap = 15;

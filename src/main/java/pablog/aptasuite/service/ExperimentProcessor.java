@@ -92,7 +92,7 @@ public class ExperimentProcessor {
         GeneralInformationDTO generalInfo = new GeneralInformationDTO(
             experiment.getName(),
             experiment.getDescription(),
-            Integer.parseInt(config.Experiment.randomizedRegionSize),
+            config.Experiment.randomizedRegionSize,
             String.valueOf(config.Experiment.primer5),
             String.valueOf(config.Experiment.primer3)
         );

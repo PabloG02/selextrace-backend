@@ -45,9 +45,11 @@ public class ConfigurationMapper {
         if (dto.sequencing() != null && dto.sequencing().randomizedRegion() != null) {
             switch (dto.sequencing().randomizedRegion()) {
                 case CreateExperimentDtos.ExactLengthRandomizedRegion exact ->
-                        config.Experiment.randomizedRegionSize = String.valueOf(exact.exactLength());
-                case CreateExperimentDtos.RangeRandomizedRegion range ->
-                        config.Experiment.randomizedRegionSize = range.min() + "-" + range.max();
+                        config.Experiment.randomizedRegionSize = exact.exactLength();
+                case CreateExperimentDtos.RangeRandomizedRegion range -> {
+                        config.AptaplexParser.randomizedRegionSizeLowerBound = range.min();
+                        config.AptaplexParser.randomizedRegionSizeUpperBound = range.max();
+                }
             }
         }
 
