@@ -5,13 +5,16 @@ import pablog.aptasuite.parsing.Parser;
 import pablog.aptasuite.parsing.io.FastqReader;
 import pablog.aptasuite.parsing.io.Reader;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ExperimentConfiguration {
 
     // --- public nested typed sections (defaults set here) ---
     public final ExperimentConfig Experiment = new ExperimentConfig();
     public final AptamerPoolConfig AptamerPool = new AptamerPoolConfig();
     public final MapDBAptamerPoolConfig MapDBAptamerPool = new MapDBAptamerPoolConfig();
-    public final SelectionCycleConfig SelectionCycle = new SelectionCycleConfig();
+    public final List<SelectionCycleConfig> SelectionCycles = new ArrayList<>();
     public final MapDBSelectionCycleConfig MapDBSelectionCycle = new MapDBSelectionCycleConfig();
     public final StructurePoolConfig StructurePool = new StructurePoolConfig();
     public final MapDBStructurePoolConfig MapDBStructurePool = new MapDBStructurePoolConfig();

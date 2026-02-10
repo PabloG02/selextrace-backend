@@ -117,26 +117,34 @@ public class InMemorySelectionCycle implements SelectionCycle {
 
     @Override
     public SelectionCycle getNextSelectionCycle() {
-        List<SelectionCycle> cycles = this.allCycles;
-        for (int i = round + 1; i < cycles.size(); i++) {
-            SelectionCycle candidate = cycles.get(i);
-            if (candidate != null) {
-                return candidate;
+        SelectionCycle best = null;
+        for (SelectionCycle candidate : this.allCycles) {
+            if (candidate == null) {
+                continue;
+            }
+            if (candidate.getRound() > round) {
+                if (best == null || candidate.getRound() < best.getRound()) {
+                    best = candidate;
+                }
             }
         }
-        return null;
+        return best;
     }
 
     @Override
     public SelectionCycle getPreviousSelectionCycle() {
-        List<SelectionCycle> cycles = this.allCycles;
-        for (int i = round - 1; i >= 0; i--) {
-            SelectionCycle candidate = cycles.get(i);
-            if (candidate != null) {
-                return candidate;
+        SelectionCycle best = null;
+        for (SelectionCycle candidate : this.allCycles) {
+            if (candidate == null) {
+                continue;
+            }
+            if (candidate.getRound() < round) {
+                if (best == null || candidate.getRound() > best.getRound()) {
+                    best = candidate;
+                }
             }
         }
-        return null;
+        return best;
     }
 
     @Override

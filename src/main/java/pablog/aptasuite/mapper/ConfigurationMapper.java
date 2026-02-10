@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -56,11 +57,14 @@ public class ConfigurationMapper {
         // --- SelectionCycle ---
         var cycles = dto.selectionCycles();
         if (cycles != null && !cycles.isEmpty()) {
-            var cycle = cycles.getFirst();
-            config.SelectionCycle.name = cycle.roundName();
-            config.SelectionCycle.round = cycle.roundNumber();
-            config.SelectionCycle.isControlSelection = cycle.isControl();
-            config.SelectionCycle.isCounterSelection = cycle.isCounterSelection();
+            for (var cycle : cycles) {
+                var cycleConfig = new ExperimentConfiguration.SelectionCycleConfig();
+                cycleConfig.name = cycle.roundName();
+                cycleConfig.round = cycle.roundNumber();
+                cycleConfig.isControlSelection = cycle.isControl();
+                cycleConfig.isCounterSelection = cycle.isCounterSelection();
+                config.SelectionCycles.add(cycleConfig);
+            }
         }
 
         // --- Sequencing ---
@@ -77,22 +81,23 @@ public class ConfigurationMapper {
         // Handle uploaded files
         try {
             if (cycles != null && !cycles.isEmpty()) {
-                var firstCycle = cycles.getFirst();
-                String cycleName = firstCycle.roundName();
-
                 List<String> forwardPaths = new ArrayList<>();
                 List<String> reversePaths = new ArrayList<>();
 
-                // Save forward files for this cycle
-                if (forwardFiles != null && forwardFiles.containsKey(cycleName)) {
-                    String path = saveMultipartFile(forwardFiles.get(cycleName), dto.name(), cycleName, "forward");
-                    if (path != null) forwardPaths.add(path);
-                }
+                for (var cycle : cycles) {
+                    String cycleName = cycle.roundName();
 
-                // Save reverse files for this cycle
-                if (reverseFiles != null && reverseFiles.containsKey(cycleName)) {
-                    String path = saveMultipartFile(reverseFiles.get(cycleName), dto.name(), cycleName, "reverse");
-                    if (path != null) reversePaths.add(path);
+                    // Save forward file for this cycle
+                    if (forwardFiles != null && forwardFiles.containsKey(cycleName)) {
+                        String path = saveMultipartFile(forwardFiles.get(cycleName), dto.name(), cycleName, "forward");
+                        if (path != null) forwardPaths.add(path);
+                    }
+
+                    // Save reverse file for this cycle
+                    if (reverseFiles != null && reverseFiles.containsKey(cycleName)) {
+                        String path = saveMultipartFile(reverseFiles.get(cycleName), dto.name(), cycleName, "reverse");
+                        if (path != null) reversePaths.add(path);
+                    }
                 }
 
                 config.AptaplexParser.forwardFiles = forwardPaths.toArray(new String[0]);

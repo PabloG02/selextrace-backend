@@ -8,6 +8,7 @@ import pablog.aptasuite.domain.pool.AptamerPool;
 import pablog.aptasuite.domain.pool.InMemoryAptamerPool;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ExperimentFactory {
@@ -42,17 +43,23 @@ public class ExperimentFactory {
     private List<SelectionCycle> initializeSelectionCycles(ExperimentConfiguration conf, AptamerPool pool) {
         List<SelectionCycle> selectionCycles = new ArrayList<>();
 
-        Integer round = conf.SelectionCycle.round;
-        String name = conf.SelectionCycle.name;
+        for (ExperimentConfiguration.SelectionCycleConfig cycleConfig : conf.SelectionCycles) {
+            Integer round = cycleConfig.round;
+            String name = cycleConfig.name;
 
-        // Validations
-        if (round == null || round < 0) {
-            throw new IllegalArgumentException("SelectionCycle round must be a non-negative integer.");
+            if (round == null || round < 0) {
+                throw new IllegalArgumentException("SelectionCycle round must be a non-negative integer.");
+            }
+            if (name == null || name.isBlank()) {
+                throw new IllegalArgumentException("SelectionCycle name is required.");
+            }
+
+            boolean isControl = Boolean.TRUE.equals(cycleConfig.isControlSelection);
+            boolean isCounter = Boolean.TRUE.equals(cycleConfig.isCounterSelection);
+
+            SelectionCycle cycle = new InMemorySelectionCycle(name, round, isControl, isCounter, pool, selectionCycles);
+            selectionCycles.add(cycle);
         }
-
-        SelectionCycle cycle = new InMemorySelectionCycle(name, round, false, false, pool, selectionCycles);
-
-        selectionCycles.add(cycle);
 
         return selectionCycles;
     }

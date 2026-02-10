@@ -128,33 +128,37 @@ public class ExperimentProcessor {
 
         SelectionCycleCompositionSetDTO selectionCycleComposition = new SelectionCycleCompositionSetDTO(
             1,
-            mapCycles(experiment.getSelectionCycles(), 1),
-            null,
-            null
+            mapCycles(filterCycles(experiment.getSelectionCycles(), false, false), 1),
+            mapCycles(filterCycles(experiment.getSelectionCycles(), false, true), 1),
+            mapCycles(filterCycles(experiment.getSelectionCycles(), true, false), 1)
         );
 
-        SelectionCycleResponseDTO selectionCycleResponse = new SelectionCycleResponseDTO(
-            experiment.getSelectionCycles().getFirst().getName(),
-            experiment.getSelectionCycles().getFirst().getRound(),
-            experiment.getSelectionCycles().getFirst().isControlSelection(),
-            experiment.getSelectionCycles().getFirst().isCounterSelection(),
-            Optional.ofNullable(experiment.getSelectionCycles().getFirst().getBarcodeFivePrime())
+        List<SelectionCycleResponseDTO> selectionCycleResponse = experiment.getSelectionCycles()
+            .stream()
+            .filter(Objects::nonNull)
+            .map(cycle -> new SelectionCycleResponseDTO(
+                cycle.getName(),
+                cycle.getRound(),
+                cycle.isControlSelection(),
+                cycle.isCounterSelection(),
+                Optional.ofNullable(cycle.getBarcodeFivePrime())
                     .map(String::new)
                     .orElse(null),
-            Optional.ofNullable(experiment.getSelectionCycles().getFirst().getBarcodeThreePrime())
+                Optional.ofNullable(cycle.getBarcodeThreePrime())
                     .map(String::new)
                     .orElse(null),
-            experiment.getSelectionCycles().getFirst().getSize(),
-            experiment.getSelectionCycles().getFirst().getUniqueSize(),
+                cycle.getSize(),
+                cycle.getUniqueSize(),
                 StreamSupport.stream(
-                                experiment.getSelectionCycles().getFirst().iterator().spliterator(),
-                                false
-                        )
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                Map.Entry::getValue
-                        ))
-        );
+                        cycle.iterator().spliterator(),
+                        false
+                    )
+                    .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue
+                    ))
+            ))
+            .toList();
 
         Map<Integer, String> idToAptamer = StreamSupport.stream(
                     experiment.getPool().inverse_view_iterator().spliterator(),
@@ -222,11 +226,10 @@ public class ExperimentProcessor {
         );
     }
 
-    private static SelectionCycleCompositionDTO mapCycles(List<SelectionCycle> cycles, int cutoff) {
+    private static Map<String, SelectionCycleCompositionDTO> mapCycles(List<SelectionCycle> cycles, int cutoff) {
+        Map<String, SelectionCycleCompositionDTO> compositions = new LinkedHashMap<>();
         for (var cycle : cycles) {
             if (cycle == null) continue;
-
-            var label = "Round %d (%s)".formatted(cycle.getRound(), cycle.getName());
 
             double uniqueFraction = (cycle.getUniqueSize() / (double) cycle.getSize()) * 100;
             int singletonCount = 0;
@@ -240,8 +243,19 @@ public class ExperimentProcessor {
             double singletonFreq = (singletonCount / (double) cycle.getUniqueSize()) * 100;
             double enrichedFreq  = (enrichedCount / (double) cycle.getUniqueSize()) * 100;
 
-            return new SelectionCycleCompositionDTO(singletonFreq, enrichedFreq, uniqueFraction);
+            compositions.put(cycle.getName(), new SelectionCycleCompositionDTO(singletonFreq, enrichedFreq, uniqueFraction));
         }
-        return null;
+        return compositions;
+    }
+
+    private static List<SelectionCycle> filterCycles(
+            List<SelectionCycle> cycles,
+            boolean control,
+            boolean counter
+    ) {
+        return cycles.stream()
+                .filter(Objects::nonNull)
+                .filter(cycle -> cycle.isControlSelection() == control && cycle.isCounterSelection() == counter)
+                .toList();
     }
 }
