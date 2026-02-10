@@ -8,7 +8,6 @@ import java.util.Map;
 
 public record ExperimentOverviewDTO(
         ExperimentDetailsDTO experimentDetails,
-        Map<String, Object> randomizedRegionSizeDistribution,
         // Testing purposes
         List<SelectionCycleResponseDTO> selectionCycleResponse,
         Metadata metadata,

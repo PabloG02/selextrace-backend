@@ -170,7 +170,6 @@ public class ExperimentProcessor {
 
         ExperimentOverviewDTO overview = new ExperimentOverviewDTO(
             experimentDetails,
-            getRegionSizes(), // ExperimentOverview-RandomizedRegionSizeDistribution
             // Testing purposes
             selectionCycleResponse,
             experiment.getMetadata(),
@@ -179,42 +178,5 @@ public class ExperimentProcessor {
         );
 
         return overview;
-    }
-
-    public Map<String, Object> getRegionSizes() {
-        Map<Integer, Integer> totals = new HashMap<>();
-
-        // Loop through all selection cycles
-        var allCycles = experiment.getMetadata().nucleotideDistributionAccepted;
-        for (var cycleEntry : allCycles.entrySet()) {
-            var cycle = cycleEntry.getValue();
-            for (var sizeEntry : cycle.entrySet()) {
-                int size = sizeEntry.getKey();
-                var positions = sizeEntry.getValue();
-
-                // Only sum counts from position 0 (to match original behavior)
-                int sum = positions.get(0)
-                        .values()
-                        .stream()
-                        .mapToInt(Integer::intValue)
-                        .sum();
-
-                totals.merge(size, sum, Integer::sum);
-            }
-        }
-
-        // Prepare data list
-        List<Map<String, Integer>> data = new ArrayList<>();
-        int total = 0;
-        for (var e : totals.entrySet()) {
-            data.add(Map.of("size", e.getKey(), "count", e.getValue()));
-            total += e.getValue();
-        }
-
-        // Response JSON
-        return Map.of(
-                "data", totals,
-                "total", total
-        );
     }
 }
