@@ -126,13 +126,6 @@ public class ExperimentProcessor {
             cyclePercentages
         );
 
-        SelectionCycleCompositionSetDTO selectionCycleComposition = new SelectionCycleCompositionSetDTO(
-            1,
-            mapCycles(filterCycles(experiment.getSelectionCycles(), false, false), 1),
-            mapCycles(filterCycles(experiment.getSelectionCycles(), false, true), 1),
-            mapCycles(filterCycles(experiment.getSelectionCycles(), true, false), 1)
-        );
-
         List<SelectionCycleResponseDTO> selectionCycleResponse = experiment.getSelectionCycles()
             .stream()
             .filter(Objects::nonNull)
@@ -178,7 +171,6 @@ public class ExperimentProcessor {
         ExperimentOverviewDTO overview = new ExperimentOverviewDTO(
             experimentDetails,
             getRegionSizes(), // ExperimentOverview-RandomizedRegionSizeDistribution
-            selectionCycleComposition, // ExperimentOverview-SelectionCycleComposition
             // Testing purposes
             selectionCycleResponse,
             experiment.getMetadata(),
@@ -224,38 +216,5 @@ public class ExperimentProcessor {
                 "data", totals,
                 "total", total
         );
-    }
-
-    private static Map<String, SelectionCycleCompositionDTO> mapCycles(List<SelectionCycle> cycles, int cutoff) {
-        Map<String, SelectionCycleCompositionDTO> compositions = new LinkedHashMap<>();
-        for (var cycle : cycles) {
-            if (cycle == null) continue;
-
-            double uniqueFraction = (cycle.getUniqueSize() / (double) cycle.getSize()) * 100;
-            int singletonCount = 0;
-            int enrichedCount = 0;
-
-            for (var aptamer : cycle.iterator()) {
-                if (aptamer.getValue() > cutoff) enrichedCount++;
-                else singletonCount++;
-            }
-
-            double singletonFreq = (singletonCount / (double) cycle.getUniqueSize()) * 100;
-            double enrichedFreq  = (enrichedCount / (double) cycle.getUniqueSize()) * 100;
-
-            compositions.put(cycle.getName(), new SelectionCycleCompositionDTO(singletonFreq, enrichedFreq, uniqueFraction));
-        }
-        return compositions;
-    }
-
-    private static List<SelectionCycle> filterCycles(
-            List<SelectionCycle> cycles,
-            boolean control,
-            boolean counter
-    ) {
-        return cycles.stream()
-                .filter(Objects::nonNull)
-                .filter(cycle -> cycle.isControlSelection() == control && cycle.isCounterSelection() == counter)
-                .toList();
     }
 }

@@ -9,7 +9,6 @@ import java.util.Map;
 public record ExperimentOverviewDTO(
         ExperimentDetailsDTO experimentDetails,
         Map<String, Object> randomizedRegionSizeDistribution,
-        SelectionCycleCompositionSetDTO selectionCycleComposition,
         // Testing purposes
         List<SelectionCycleResponseDTO> selectionCycleResponse,
         Metadata metadata,
