@@ -19,7 +19,6 @@ public class ExperimentConfiguration {
     public final StructurePoolConfig StructurePool = new StructurePoolConfig();
     public final MapDBStructurePoolConfig MapDBStructurePool = new MapDBStructurePoolConfig();
     public final ClusterContainerConfig ClusterContainer = new ClusterContainerConfig();
-    public final AptaClusterConfig AptaCluster = new AptaClusterConfig();
     public final ParserConfig Parser = new ParserConfig();
     public final AptaplexParserConfig AptaplexParser = new AptaplexParserConfig();
     public final AptaSimConfig AptaSim = new AptaSimConfig();
@@ -72,13 +71,6 @@ public class ExperimentConfiguration {
 
     public static class ClusterContainerConfig {
 //        public Class<? extends ClusterContainer> backend = MapDBClusterContainer.class;
-    }
-
-    public static class AptaClusterConfig {
-        public int EditDistance = 5;
-        public int LSHIterations = 5;
-        public int KmerSize = 3;
-        public int KmerCutoffIterations = 10000;
     }
 
     public static class ParserConfig {

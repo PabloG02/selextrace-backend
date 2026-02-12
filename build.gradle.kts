@@ -20,6 +20,9 @@ repositories {
 
 dependencies {
 	implementation(libs.milib)
+	implementation(libs.eclipse.collections)
+	implementation(libs.eclipse.collections.api)
+	implementation(libs.bloom.filter)
 	implementation(libs.spring.boot.starter.data.mongodb)
 	implementation(libs.spring.boot.starter.webmvc)
 	testImplementation(libs.spring.boot.starter.data.mongodb.test)

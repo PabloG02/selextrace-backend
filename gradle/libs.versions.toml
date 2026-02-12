@@ -2,6 +2,8 @@
 spring-boot = "4.0.0"
 spring-dependency-management = "1.1.7"
 milib = "2.3.0"
+eclipse-collections = "13.0.0"
+bloom-filter = "2.2.2"
 
 [libraries]
 spring-boot-starter-data-mongodb = { module = "org.springframework.boot:spring-boot-starter-data-mongodb" }
@@ -11,6 +13,9 @@ spring-boot-starter-webmvc-test = { module = "org.springframework.boot:spring-bo
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
 milib = { module = "com.milaboratory:milib", version.ref = "milib" }
+eclipse-collections = { module = "org.eclipse.collections:eclipse-collections", version.ref = "eclipse-collections" }
+eclipse-collections-api = { module = "org.eclipse.collections:eclipse-collections-api", version.ref = "eclipse-collections" }
+bloom-filter = { module = "com.baqend:bloom-filter", version.ref = "bloom-filter" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
