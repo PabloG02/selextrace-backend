@@ -1,194 +1,135 @@
-/**
- * 
- */
 package pablog.aptasuite.lib.capr;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.Objects;
 
-/**
- * @author Jan Hoinka
- * Original source code was extracted from Vienna RNA package (version 1.8.5)
- * The author of the original code is Dr. Ivo L Hofacker. The author of the c++ 
- * implementation is Tsukasa Fukunaga. This code represents a java implementation of
- * <code>initloops.h</code> of the 
- * CapR package available at <a href="https://github.com/fukunagatsu/CapR">https://github.com/fukunagatsu/CapR</a>.
- */
+/// Original source code was extracted from Vienna RNA package (version 1.8.5)
+/// The author of the original code is Dr. Ivo L Hofacker. The author of the C++
+/// implementation is Tsukasa Fukunaga. This code represents a Java implementation of
+/// `initloops.h` of the CapR package available at
+/// <https://github.com/fukunagatsu/CapR>.
+///
+/// @author Jan Hoinka
 public final class InitLoops {
-	
-	public static  int[][][][] int11_37 = new int[8][8][5][5];
-	static
-	 {
-		 
-		//Get file from resources folder
-		InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream("capR_int11_37.txt");
-		BufferedInputStream bis = new BufferedInputStream(is);
-		
-		String token;
-		int level = -1;
-		int[] levels = {0,0,0,0};
-	    while (true) {
-		    
-			token = getNextToken(bis);
-			if (token == null){break;}
-		    
-			if (token.equals("{")){
-				level+=1;
-			}
-			else if (token.equals("}")){
-				levels[level]=0;
-				level-=1;
-				// last case would otherwise crash on access
-				if (level != -1){
-					levels[level]+=1;					
-				}
-			}
-			else{
-				// add the number
-				int11_37[levels[0]][levels[1]][levels[2]][levels[3]] = Integer.parseInt(token);
-				levels[level]+=1;
-			}
-		}	
-	}
-	
-	public static  int[][][][][] int21_37 = new int[8][8][5][5][5];	
-	static
-	 {
-		
-		//Get file from resources folder
-		InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream("capR_int21_37.txt");
-		BufferedInputStream bis = new BufferedInputStream(is);
-		
-		String token;
-		int level = -1;
-		int[] levels = {0,0,0,0,0};
-	    while (true) {
-		    
-			token = getNextToken(bis);
-			if (token == null){break;}
-		    
-			if (token.equals("{")){
-				level+=1;
-			}
-			else if (token.equals("}")){
-				levels[level]=0;
-				level-=1;
-				// last case would otherwise crash on access
-				if (level != -1){
-					levels[level]+=1;					
-				}
-			}
-			else{
-				// add the number
-				int21_37[levels[0]][levels[1]][levels[2]][levels[3]][levels[4]] = Integer.parseInt(token);
-				levels[level]+=1;
-			}
-		}	
-	}
-	
-	/**
-	 * Adding this array in a  way would exceed javas 64k limit.
-	 * Hence, we read it from file
-	 */
-	public static  int[][][][][][] int22_37 = new int[8][8][5][5][5][5] ;
-	static
-	 {
-		
-		//Get file from resources folder
-		InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream("capR_int22_37.txt");
-		BufferedInputStream bis = new BufferedInputStream(is);
-		
-		String token;
-		int level = -1;
-		int[] levels = {0,0,0,0,0,0};
-	    while (true) {
-		    
-			token = getNextToken(bis);
-			if (token == null){break;}
-		    
-			if (token.equals("{")){
-				level+=1;
-			}
-			else if (token.equals("}")){
-				levels[level]=0;
-				level-=1;
-				// last case would otherwise crash on access
-				if (level != -1){
-					levels[level]+=1;					
-				}
-			}
-			else{
-				// add the number
-				int22_37[levels[0]][levels[1]][levels[2]][levels[3]][levels[4]][levels[5]] = Integer.parseInt(token);
-				levels[level]+=1;
-			}
-		}
-	}
-	
-	/**
-	 * Provided with an inputstream, this function returns the next valid token
-	 * as a string. A valid token here is either a positive or negative integer,
-	 * { or }. All other elements in the file are ignored.  
-	 * @param bis the stream to read from
-	 * @return null if eof
-	 */
-	private static  String getNextToken(BufferedInputStream bis){
-		
-		try {
-			while (bis.available() > 0) {
-				
-				// read the first char
-				char c = (char) bis.read();
-				
-				// chase for changing dimension
-				if (c == '{' || c == '}'){
-					return c+"";
-				}
-				
-				// do we have a negative number?
-				boolean negative = false;
-				if (c == '-'){
-					negative = true;
-					c = (char) bis.read();
-				}
-				
-				// case for positive number
-				String n = "";
-				if (c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9'){
-					boolean scanning = true;
-					char lc;
-					n = c+"";
-					while (scanning){
-						
-						//we need to peek ahead.
-						bis.mark(1);
-						lc = (char) bis.read();
-						bis.reset();
-						
-						//is this still part of the number?
-						if (lc == '0' || lc == '1' || lc == '2' || lc == '3' || lc == '4' || lc == '5' || lc == '6' || lc == '7' || lc == '8' || lc == '9'){
-							n += lc;
-							bis.read();
-						}
-						else{ // if not, we are done here
-							scanning = false;
-						}
-					}
-					if (negative){ return "-"+n;}
-					else{ return n;}
-				}
-				
-				
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		//end of file case
-		return null;
-	}
-	
-	
+
+    // Prevent instantiation
+    private InitLoops() {}
+
+    public static final int[][][][] int11_37 = new int[8][8][5][5];
+    public static final int[][][][][] int21_37 = new int[8][8][5][5][5];
+    /// Adding this array in a standard way would exceed Java's 64k code size limit per method.
+    /// Hence, we read it from file.
+    public static final int[][][][][][] int22_37 = new int[8][8][5][5][5][5];
+
+    static {
+        loadIntArray("capR_int11_37.txt", 4, (idx, value) ->
+                int11_37[idx[0]][idx[1]][idx[2]][idx[3]] = value);
+        loadIntArray("capR_int21_37.txt", 5, (idx, value) ->
+                int21_37[idx[0]][idx[1]][idx[2]][idx[3]][idx[4]] = value);
+        loadIntArray("capR_int22_37.txt", 6, (idx, value) ->
+                int22_37[idx[0]][idx[1]][idx[2]][idx[3]][idx[4]][idx[5]] = value);
+    }
+
+    @FunctionalInterface
+    private interface IndexSetter {
+        void set(int[] indices, int value);
+    }
+
+    /// Reads a nested structure of integers from a resource file and populates an array.
+    ///
+    /// @param resourceName The name of the file in the classpath.
+    /// @param dimensions The expected depth of the nested array structure.
+    /// @param setter A callback to place the parsed integer into the correct array slot.
+    /// @throws UncheckedIOException If the resource cannot be read.
+    private static void loadIntArray(String resourceName, int dimensions, IndexSetter setter) {
+        try (BufferedInputStream bis = new BufferedInputStream(openResource(resourceName))) {
+            int level = -1;
+            int[] indices = new int[dimensions];
+            String token;
+            while ((token = nextToken(bis)) != null) {
+                switch (token) {
+                    case "{":
+                        level++;
+                        break;
+                    case "}":
+                        // Reset current dimension index
+                        indices[level] = 0;
+                        level--;
+                        if (level != -1) {
+                            // Increment parent dimension index
+                            indices[level]++;
+                        }
+                        break;
+                    default:
+                        // It is a number
+                        setter.set(indices, Integer.parseInt(token));
+                        indices[level]++;
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed reading resource: " + resourceName, e);
+        }
+    }
+
+    private static InputStream openResource(String resourceName) {
+        return Objects.requireNonNull(
+                InitLoops.class.getClassLoader().getResourceAsStream(resourceName),
+                () -> "Resource not found: " + resourceName);
+    }
+
+    /// Parses the next relevant token from the [InputStream].
+    ///
+    /// Valid tokens include:
+    /// * Structural delimiters: `{` or `}`
+    /// * Integers: Positive or negative whole numbers
+    ///
+    /// All other characters (whitespace, commas, etc.) are treated as separators and ignored.
+    ///
+    /// @param bis The buffered input stream to read from.
+    /// @return The next token as a String, or `null` if the end of the stream is reached.
+    /// @throws IOException If a read error occurs.
+    private static String nextToken(BufferedInputStream bis) throws IOException {
+        int b;
+        while ((b = bis.read()) != -1) {
+            char c = (char) b;
+
+            if (c == '{' || c == '}') {
+                return String.valueOf(c);
+            }
+
+            boolean negative = false;
+            if (c == '-') {
+                negative = true;
+                b = bis.read();
+                if (b == -1) {
+                    return null;
+                }
+                c = (char) b;
+            }
+
+            if (Character.isDigit(c)) {
+                StringBuilder number = new StringBuilder();
+                number.append(c);
+                while (true) {
+                    bis.mark(1);
+                    int next = bis.read();
+                    if (next == -1) {
+                        break;
+                    }
+                    char nextChar = (char) next;
+                    if (Character.isDigit(nextChar)) {
+                        number.append(nextChar);
+                    } else {
+                        bis.reset();
+                        break;
+                    }
+                }
+                return negative ? "-" + number : number.toString();
+            }
+        }
+        return null;
+    }
 }
