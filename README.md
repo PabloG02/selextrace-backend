@@ -11,7 +11,7 @@ AptaSuite Backend reimplements the core functionality of the original AptaSuite 
 ## Requirements
 
 - Java 25 or higher
-- MongoDB (local instance or cloud-based like MongoDB Atlas)
+- PostgreSQL 18+ (production only; the `dev` profile uses embedded H2)
 
 ## Installation
 
@@ -22,11 +22,25 @@ AptaSuite Backend reimplements the core functionality of the original AptaSuite 
    cd aptasuite
    ```
 
-2. Create a `.secrets.yml` file in the project root with your MongoDB connection string:
+2. Choose how to run the app:
 
-   ```yaml
-   MONGODB_URI: mongodb+srv://username:password@cluster.mongodb.net/aptasuite
-   ```
+   - **Local development (no DB startup required):**
+
+     ```bash
+     ./gradlew bootRun --args='--spring.profiles.active=dev'
+     ```
+
+     This uses an embedded H2 database persisted at `./.data/aptasuite.mv.db`.
+
+   - **Production-like local run with PostgreSQL:**
+
+     Create a `.secrets.yml` file in the project root with PostgreSQL connection settings:
+
+     ```yaml
+     POSTGRES_URL: jdbc:postgresql://localhost:5432/aptasuite
+     POSTGRES_USER: username
+     POSTGRES_PASSWORD: password
+     ```
 
 3. Build the project:
 
@@ -47,7 +61,7 @@ The server will start on `http://localhost:8080`.
 The main configuration file is located at `src/main/resources/application.yml`. Key settings include:
 
 - Maximum file upload size (default: 100MB)
-- MongoDB connection (via `.secrets.yml`)
+- PostgreSQL datasource and JPA settings (via `.secrets.yml`)
 
 ## Credits
 

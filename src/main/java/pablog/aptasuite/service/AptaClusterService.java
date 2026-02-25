@@ -8,11 +8,8 @@ import pablog.aptasuite.config.AptaClusterConfiguration;
 import pablog.aptasuite.domain.cluster.ClusterContainer;
 import pablog.aptasuite.domain.cluster.InMemoryClusterContainer;
 import pablog.aptasuite.domain.experiment.Experiment;
-import pablog.aptasuite.domain.experiment.ExperimentFactory;
 import pablog.aptasuite.model.ClusterAnalysis;
-import pablog.aptasuite.model.ExperimentOverviewDocument;
 import pablog.aptasuite.repository.ClusterAnalysisRepository;
-import pablog.aptasuite.repository.ExperimentOverviewRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -25,14 +22,14 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class AptaClusterService {
 
     private final ClusterAnalysisRepository analysisRepository;
-    private final ExperimentOverviewRepository overviewRepository;
+    private final ExperimentPersistenceService experimentPersistenceService;
 
     public AptaClusterService(
             ClusterAnalysisRepository analysisRepository,
-            ExperimentOverviewRepository overviewRepository
+            ExperimentPersistenceService experimentPersistenceService
     ) {
         this.analysisRepository = analysisRepository;
-        this.overviewRepository = overviewRepository;
+        this.experimentPersistenceService = experimentPersistenceService;
     }
 
     public List<ClusterAnalysis> listAnalyses(String experimentId) {
@@ -54,11 +51,8 @@ public class AptaClusterService {
     public ClusterAnalysis createAnalysis(String experimentId, AptaClusterConfiguration request) {
         validateExperimentId(experimentId);
 
-        ExperimentOverviewDocument doc = overviewRepository.findById(experimentId)
+        Experiment experiment = experimentPersistenceService.findExperimentById(experimentId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Experiment not found"));
-
-        ExperimentFactory factory = new ExperimentFactory();
-        Experiment experiment = factory.createExperiment(doc.getOverview());
 
         AptaClusterConfiguration config = AptaClusterConfiguration.mergeWithDefaults(request);
 
@@ -89,7 +83,7 @@ public class AptaClusterService {
     }
 
     private void ensureExperimentExists(String experimentId) {
-        if (!overviewRepository.existsById(experimentId)) {
+        if (!experimentPersistenceService.existsExperiment(experimentId)) {
             throw new ResponseStatusException(NOT_FOUND, "Experiment not found");
         }
     }

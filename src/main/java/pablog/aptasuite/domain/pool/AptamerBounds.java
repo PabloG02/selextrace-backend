@@ -12,7 +12,7 @@ public class AptamerBounds implements Serializable {
 	public int endIndex;
 
 	/**
-	 * No-argument constructor needed for framework deserialization (e.g., MongoDB).
+	 * No-argument constructor needed by Spring Data for deserialization.
 	 */
 	protected AptamerBounds() {
 		this.startIndex = 0;

@@ -3,14 +3,24 @@ spring:
     name: aptasuite
   
   config:
-    # This file is mandatory and must be created locally.
+    # This file must be created locally.
     # It is excluded from Git via .gitignore.
-    import: "file:.secrets.yml"
+    import: "optional:file:.secrets.yml"
 
-  mongodb:
-    # This variable must be defined inside .secrets.yml as:
-    # SPRING_MONGODB_URI: mongodb+srv://user:pass@cluster...
-    uri: ${MONGODB_URI}
+  datasource:
+    # These variables can be defined inside .secrets.yml.
+    # Example:
+    # POSTGRES_URL: jdbc:postgresql://localhost:5432/aptasuite
+    # POSTGRES_USER: username
+    # POSTGRES_PASSWORD: password
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
 
   servlet:
     multipart:

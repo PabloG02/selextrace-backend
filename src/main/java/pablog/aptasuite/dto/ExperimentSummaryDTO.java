@@ -7,8 +7,8 @@ import java.time.Instant;
  * Contains only essential fields: id, name, description, and creation date.
  */
 public record ExperimentSummaryDTO(
-                String id,
-                String name,
-                String description,
-                Instant createdAt) {
-}
+        String id,
+        String name,
+        String description,
+        Instant createdAt
+) {}

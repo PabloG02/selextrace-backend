@@ -53,8 +53,11 @@ public class Accumulator implements Serializable {
      */
     private static final long serialVersionUID = 2243113298802820956L;
 
+    @JsonProperty
     private int n = 0; // number of data values
+    @JsonProperty
     private double sum = 0.0; // sample variance * (n-1)
+    @JsonProperty
     private double mu = 0.0; // sample mean
 
     /**
@@ -80,7 +83,6 @@ public class Accumulator implements Serializable {
      * 
      * @return the mean of the data values
      */
-    @JsonProperty("mean")
     public double mean() {
         return mu;
     }
@@ -90,7 +92,6 @@ public class Accumulator implements Serializable {
      * 
      * @return the sample variance of the data values
      */
-    @JsonProperty("variance")
     public double var() {
         if (n <= 1)
             return Double.NaN;
@@ -102,7 +103,6 @@ public class Accumulator implements Serializable {
      * 
      * @return the sample standard deviation of the data values
      */
-    @JsonProperty("stddev")
     public double stddev() {
         return Math.sqrt(this.var());
     }
@@ -112,7 +112,6 @@ public class Accumulator implements Serializable {
      * 
      * @return the number of data values
      */
-    @JsonProperty("count")
     public int count() {
         return n;
     }

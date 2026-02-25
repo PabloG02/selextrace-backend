@@ -1,7 +1,10 @@
 package pablog.aptasuite.config;
 
+import jakarta.persistence.Embeddable;
+
 import java.util.Objects;
 
+@Embeddable
 public record AptaClusterConfiguration(
         Integer randomizedRegionSize,
         Integer lshDimension,

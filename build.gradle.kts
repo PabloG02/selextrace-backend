@@ -23,9 +23,12 @@ dependencies {
 	implementation(libs.eclipse.collections)
 	implementation(libs.eclipse.collections.api)
 	implementation(libs.bloom.filter)
-	implementation(libs.spring.boot.starter.data.mongodb)
+	// Spring Boot dependencies
+	implementation(libs.spring.boot.starter.data.jpa)
 	implementation(libs.spring.boot.starter.webmvc)
-	testImplementation(libs.spring.boot.starter.data.mongodb.test)
+	runtimeOnly(libs.h2)
+	runtimeOnly(libs.postgresql)
+	testImplementation(libs.spring.boot.starter.data.jpa.test)
 	testImplementation(libs.spring.boot.starter.webmvc.test)
 	testRuntimeOnly(libs.junit.platform.launcher)
 }

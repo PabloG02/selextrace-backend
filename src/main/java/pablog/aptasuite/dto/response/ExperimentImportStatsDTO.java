@@ -1,6 +1,6 @@
-package pablog.aptasuite.dto;
+package pablog.aptasuite.dto.response;
 
-public record SequenceImportStatisticsDTO(
+public record ExperimentImportStatsDTO(
         long totalProcessedReads,
         long totalAcceptedReads,
         long contigAssemblyFailure,

@@ -82,7 +82,7 @@ public class Metadata {
     public Map<ParserStat, Integer> parserStatistics = new EnumMap<>(ParserStat.class);
 
     /**
-     * Default constructor required by Spring Data MongoDB for deserialization.
+     * Default constructor required by Spring Data for deserialization.
      */
     public Metadata() {}
 

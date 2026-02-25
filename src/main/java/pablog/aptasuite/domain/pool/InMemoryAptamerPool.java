@@ -1,11 +1,9 @@
 package pablog.aptasuite.domain.pool;
 
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -13,7 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pablog.aptasuite.dto.ExperimentOverviewDTO;
 
 /**
  * In-memory implementation of the AptamerPool interface.
@@ -59,55 +56,6 @@ public class InMemoryAptamerPool implements AptamerPool {
         this.idCounter = new AtomicInteger(0);
 
         log.debug("InMemoryAptamerPool instantiation complete");
-    }
-
-    /**
-     * Constructor - rebuilds an in-memory pool from an ExperimentOverviewDTO.
-     *
-     * @param overview ExperimentOverviewDTO containing aptamer data and bounds
-     */
-    public InMemoryAptamerPool(ExperimentOverviewDTO overview) {
-        this();
-
-        if (overview == null) {
-            throw new IllegalArgumentException("overview cannot be null");
-        }
-
-        Map<Integer, String> aptamerMap = overview.idToAptamer();
-        Map<Integer, AptamerBounds> boundsMap = overview.idToBounds();
-
-        if (aptamerMap == null || boundsMap == null) {
-            log.warn("ExperimentOverviewDTO missing aptamer data or bounds; pool remains empty");
-            return;
-        }
-
-        int maxId = 0;
-        for (Entry<Integer, String> entry : aptamerMap.entrySet()) {
-            Integer id = entry.getKey();
-            String sequence = entry.getValue();
-
-            if (id == null || sequence == null) {
-                throw new IllegalArgumentException("Aptamer id and sequence must be non-null");
-            }
-
-            AptamerBounds bounds = boundsMap.get(id);
-            if (bounds == null) {
-                throw new IllegalArgumentException("Missing bounds for aptamer id " + id);
-            }
-
-            byte[] bytes = sequence.getBytes(StandardCharsets.UTF_8);
-
-            aptamerToId.put(new ByteArrayWrapper(bytes), id);
-            idToAptamer.put(id, bytes);
-            idToBounds.put(id, new int[]{bounds.startIndex, bounds.endIndex});
-
-            if (id > maxId) {
-                maxId = id;
-            }
-        }
-
-        idCounter.set(maxId);
-        log.debug("InMemoryAptamerPool hydrated from ExperimentOverviewDTO with {} entries", idToAptamer.size());
     }
 
     @Override

@@ -38,3 +38,6 @@ out/
 
 ### Secrets ###
 .secrets.yml
+
+### Local H2 DB ###
+.data/

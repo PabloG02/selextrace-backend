@@ -6,7 +6,6 @@ import pablog.aptasuite.domain.pool.AptamerPool;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public class Experiment implements Serializable {
 
@@ -18,10 +17,9 @@ public class Experiment implements Serializable {
     private final Metadata metadata;
     private final AptamerPool pool;
 
-    /**
-     * Private constructor used by the Builder.
-     */
-    Experiment(String name, String description,
+    // TODO: Try to remove public access
+    /// Private constructor used by the Builder.
+    public Experiment(String name, String description,
                List<SelectionCycle> selectionCycles,
                Metadata metadata,
                AptamerPool pool) {
