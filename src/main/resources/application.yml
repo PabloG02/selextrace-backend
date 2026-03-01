@@ -1,6 +1,6 @@
 spring:
   application:
-    name: aptasuite
+    name: SELEXTrace
   
   config:
     # This file must be created locally.
@@ -10,7 +10,7 @@ spring:
   datasource:
     # These variables can be defined inside .secrets.yml.
     # Example:
-    # POSTGRES_URL: jdbc:postgresql://localhost:5432/aptasuite
+    # POSTGRES_URL: jdbc:postgresql://localhost:5432/selextrace
     # POSTGRES_USER: username
     # POSTGRES_PASSWORD: password
     url: ${POSTGRES_URL}
@@ -27,6 +27,6 @@ spring:
       max-file-size: 10GB
       max-request-size: 10GB
 
-aptasuite:
+selextrace:
   files:
-    upload-dir: "D:/Users/Pablo/Development/To delete/aptasuite/files-spring"
+    upload-dir: "D:/Users/Pablo/Development/To delete/selextrace/files-spring"

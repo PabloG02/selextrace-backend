@@ -1,1 +1,1 @@
-rootProject.name = "aptasuite"
+rootProject.name = "selextrace"

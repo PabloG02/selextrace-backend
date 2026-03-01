@@ -1,10 +1,10 @@
-# AptaSuite Backend
+# SELEXTrace Backend
 
 A Spring Boot backend for web-based aptamer bioinformatics analysis. This is a modern rewrite of the original AptaSuite, designed to provide REST APIs for analyzing HT-SELEX (High-Throughput Systematic Evolution of Ligands by Exponential Enrichment) experiments.
 
 ## About
 
-AptaSuite Backend reimplements the core functionality of the original AptaSuite platform for the web. It processes sequencing data from aptamer selection experiments, providing tools for sequence analysis, structural predictions, and experiment management.
+SELEXTrace Backend reimplements the core functionality of the original AptaSuite platform for the web. It processes sequencing data from aptamer selection experiments, providing tools for sequence analysis, structural predictions, and experiment management.
 
 **Note**: This is an ongoing rewrite and does not yet have complete feature parity with the original AptaSuite application.
 
@@ -19,7 +19,7 @@ AptaSuite Backend reimplements the core functionality of the original AptaSuite 
 
    ```bash
    git clone <repository-url>
-   cd aptasuite
+   cd selextrace
    ```
 
 2. Choose how to run the app:
@@ -30,14 +30,14 @@ AptaSuite Backend reimplements the core functionality of the original AptaSuite 
      ./gradlew bootRun --args='--spring.profiles.active=dev'
      ```
 
-     This uses an embedded H2 database persisted at `./.data/aptasuite.mv.db`.
+     This uses an embedded H2 database persisted at `./.data/selextrace.mv.db`.
 
    - **Production-like local run with PostgreSQL:**
 
      Create a `.secrets.yml` file in the project root with PostgreSQL connection settings:
 
      ```yaml
-     POSTGRES_URL: jdbc:postgresql://localhost:5432/aptasuite
+     POSTGRES_URL: jdbc:postgresql://localhost:5432/selextrace
      POSTGRES_USER: username
      POSTGRES_PASSWORD: password
      ```
