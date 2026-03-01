@@ -21,7 +21,7 @@ public class ConfigurationMapper {
     private final Path baseDir;
 
     public ConfigurationMapper(@Value("${selextrace.files.upload-dir}") String baseDir) {
-        this.baseDir = Paths.get(baseDir);
+        this.baseDir = Paths.get(baseDir).toAbsolutePath();
     }
 
     public ExperimentConfiguration fromDto(

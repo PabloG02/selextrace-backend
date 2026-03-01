@@ -29,4 +29,4 @@ spring:
 
 selextrace:
   files:
-    upload-dir: "D:/Users/Pablo/Development/To delete/selextrace/files-spring"
+    upload-dir: "./.data/files-spring"
