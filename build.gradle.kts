@@ -23,6 +23,8 @@ dependencies {
 	implementation(libs.eclipse.collections)
 	implementation(libs.eclipse.collections.api)
 	implementation(libs.bloom.filter)
+	implementation(libs.commons.math3)
+	implementation(libs.fastutil)
 	// Spring Boot dependencies
 	implementation(libs.spring.boot.starter.data.jpa)
 	implementation(libs.spring.boot.starter.webmvc)
