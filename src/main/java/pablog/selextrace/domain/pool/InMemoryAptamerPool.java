@@ -3,6 +3,7 @@ package pablog.selextrace.domain.pool;
 import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -159,7 +160,7 @@ public class InMemoryAptamerPool implements AptamerPool {
 
     @Override
     public Iterable<Entry<Integer, byte[]>> inverse_view_iterator() {
-        return new InverseIterator();
+        return Collections.unmodifiableSet(idToAptamer.entrySet());
     }
 
     @Override
@@ -189,30 +190,6 @@ public class InMemoryAptamerPool implements AptamerPool {
                 public Entry<byte[], Integer> next() {
                     Entry<ByteArrayWrapper, Integer> entry = baseIterator.next();
                     return new AbstractMap.SimpleEntry<>(entry.getKey().data, entry.getValue());
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
-        }
-    }
-
-    private class InverseIterator implements Iterable<Entry<Integer, byte[]>> {
-        @Override
-        public Iterator<Entry<Integer, byte[]>> iterator() {
-            return new Iterator<>() {
-                private final Iterator<Entry<Integer, byte[]>> baseIterator = idToAptamer.entrySet().iterator();
-
-                @Override
-                public boolean hasNext() {
-                    return baseIterator.hasNext();
-                }
-
-                @Override
-                public Entry<Integer, byte[]> next() {
-                    return baseIterator.next();
                 }
 
                 @Override
