@@ -1,5 +1,6 @@
 package pablog.selextrace.service;
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -74,6 +75,20 @@ public class AptaClusterService {
         );
 
         return analysisRepository.save(analysis);
+    }
+
+    @Transactional
+    public void deleteAnalysis(String experimentId, String analysisId) {
+        validateExperimentId(experimentId);
+        if (!StringUtils.hasText(analysisId)) {
+            throw new IllegalArgumentException("Analysis ID is required");
+        }
+
+        ensureExperimentExists(experimentId);
+        long deleted = analysisRepository.deleteByIdAndExperimentId(analysisId, experimentId);
+        if (deleted == 0) {
+            throw new ResponseStatusException(NOT_FOUND, "Clustering analysis not found");
+        }
     }
 
     private void validateExperimentId(String experimentId) {

@@ -1,5 +1,6 @@
 package pablog.selextrace.service;
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -75,6 +76,20 @@ public class MotifAnalysisService {
         );
 
         return motifAnalysisRepository.save(analysis);
+    }
+
+    @Transactional
+    public void deleteAnalysis(String experimentId, String analysisId) {
+        validateExperimentId(experimentId);
+        if (!StringUtils.hasText(analysisId)) {
+            throw new IllegalArgumentException("Analysis ID is required");
+        }
+
+        ensureExperimentExists(experimentId);
+        long deleted = motifAnalysisRepository.deleteByIdAndExperimentId(analysisId, experimentId);
+        if (deleted == 0) {
+            throw new ResponseStatusException(NOT_FOUND, "Motif analysis not found");
+        }
     }
 
     private void validateExperimentId(String experimentId) {

@@ -35,4 +35,9 @@ public class ClusterController {
     ) {
         return aptaClusterService.createAnalysis(experimentId, request);
     }
+
+    @DeleteMapping("/{analysisId}")
+    public void deleteAnalysis(@PathVariable String experimentId, @PathVariable String analysisId) {
+        aptaClusterService.deleteAnalysis(experimentId, analysisId);
+    }
 }
