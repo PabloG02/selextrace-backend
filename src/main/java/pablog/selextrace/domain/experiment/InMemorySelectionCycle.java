@@ -1,9 +1,10 @@
 package pablog.selextrace.domain.experiment;
 
+import java.io.Serial;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import pablog.selextrace.domain.pool.AptamerPool;
@@ -15,6 +16,7 @@ import pablog.selextrace.domain.pool.AptamerPool;
  */
 public class InMemorySelectionCycle implements SelectionCycle {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final AptamerPool pool;
@@ -25,7 +27,7 @@ public class InMemorySelectionCycle implements SelectionCycle {
     private final boolean controlSelection;
     private final boolean counterSelection;
 
-    private final ConcurrentMap<Integer, AtomicInteger> counts = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Integer, AtomicInteger> counts = new ConcurrentSkipListMap<>();
     private final AtomicInteger totalSize = new AtomicInteger();
     private final AtomicInteger uniqueSize = new AtomicInteger();
 
@@ -202,7 +204,7 @@ public class InMemorySelectionCycle implements SelectionCycle {
 
     @Override
     public Iterable<Entry<Integer, Integer>> iterator() {
-        return () -> new Iterator<Entry<Integer, Integer>>() {
+        return () -> new Iterator<>() {
             private final Iterator<Entry<Integer, AtomicInteger>> delegate = counts.entrySet().iterator();
 
             @Override
@@ -220,7 +222,7 @@ public class InMemorySelectionCycle implements SelectionCycle {
 
     @Override
     public Iterable<Entry<byte[], Integer>> sequence_iterator() {
-        return () -> new Iterator<Entry<byte[], Integer>>() {
+        return () -> new Iterator<>() {
             private final Iterator<Entry<Integer, Integer>> delegate = iterator().iterator();
 
             @Override

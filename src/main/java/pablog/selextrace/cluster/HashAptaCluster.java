@@ -335,6 +335,7 @@ public class HashAptaCluster implements AptaCluster {
         int[] aptamerSums = new int[experiment.getPool().size()];
         for (SelectionCycle cycle : experiment.getSelectionCycles()) {
             counter = 0;
+            // IMPORTANT: This loop relies on `cycle` keys being sorted in ascending order.
             for (Entry<Integer, Integer> cycleIt : cycle.iterator()) {
                 // This is guaranteed to terminate since cycle IDs are a subset of the aptamer pool IDs
                 while (this.aptamersBySize[counter] != cycleIt.getKey()) {
