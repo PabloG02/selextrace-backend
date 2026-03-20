@@ -3,6 +3,7 @@ package pablog.selextrace.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -76,5 +77,14 @@ public class ExperimentController {
         processor.processData();
         ExperimentRecord record = processor.buildExperimentRecord();
         return experimentPersistenceService.persistExperiment(record);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteExperiment(@PathVariable String id) {
+        boolean deleted = experimentPersistenceService.deleteExperiment(id);
+        if (!deleted) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Experiment not found in PostgreSQL");
+        }
+        return ResponseEntity.noContent().build();
     }
 }

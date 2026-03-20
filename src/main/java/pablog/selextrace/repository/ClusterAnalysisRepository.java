@@ -15,4 +15,6 @@ public interface ClusterAnalysisRepository extends JpaRepository<ClusterAnalysis
     Optional<ClusterAnalysis> findByIdAndExperimentId(String id, String experimentId);
 
     long deleteByIdAndExperimentId(String id, String experimentId);
+
+    long deleteByExperimentId(String experimentId);
 }

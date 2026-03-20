@@ -15,4 +15,6 @@ public interface MotifAnalysisRepository extends JpaRepository<MotifAnalysis, St
     Optional<MotifAnalysis> findByIdAndExperimentId(String id, String experimentId);
 
     long deleteByIdAndExperimentId(String id, String experimentId);
+
+    long deleteByExperimentId(String experimentId);
 }
