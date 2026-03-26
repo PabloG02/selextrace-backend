@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -77,18 +76,7 @@ public class ExperimentRecordMapper {
 
         ExperimentPoolDTO pool = new ExperimentPoolDTO(idToAptamer, idToBounds);
 
-        Map<String, Double> percentagesByCycle = new LinkedHashMap<>();
-        if (record.getTotalAcceptedReads() > 0) {
-            for (SelectionCycleRecord cycle : safeCycles) {
-                percentagesByCycle.put(
-                        cycle.getName(),
-                        (cycle.getTotalSize() * 100.0) / record.getTotalAcceptedReads()
-                );
-            }
-        }
-
         ExperimentTechnicalDetailsResponseDTO technicalDetails = new ExperimentTechnicalDetailsResponseDTO(
-                percentagesByCycle,
                 record.getMetadataRecord() == null
                         ? null
                         : ExperimentMetadataDTO.from(record.getMetadataRecord().getMetadata())
