@@ -12,6 +12,7 @@ import pablog.selextrace.repository.AptamerRecordRepository;
 import pablog.selextrace.repository.ClusterAnalysisRepository;
 import pablog.selextrace.repository.ExperimentMetadataRecordRepository;
 import pablog.selextrace.repository.ExperimentRecordRepository;
+import pablog.selextrace.repository.FsbcAnalysisRepository;
 import pablog.selextrace.repository.MotifAnalysisRepository;
 import pablog.selextrace.repository.SelectionCycleRecordRepository;
 import pablog.selextrace.service.mapper.ExperimentRecordMapper;
@@ -31,6 +32,7 @@ public class ExperimentPersistenceService {
     private final SelectionCycleRecordRepository selectionCycleRecordRepository;
     private final AptamerRecordRepository aptamerRecordRepository;
     private final ClusterAnalysisRepository clusterAnalysisRepository;
+    private final FsbcAnalysisRepository fsbcAnalysisRepository;
     private final MotifAnalysisRepository motifAnalysisRepository;
     private final ExperimentRecordMapper experimentRecordMapper;
 
@@ -40,6 +42,7 @@ public class ExperimentPersistenceService {
             SelectionCycleRecordRepository selectionCycleRecordRepository,
             AptamerRecordRepository aptamerRecordRepository,
             ClusterAnalysisRepository clusterAnalysisRepository,
+            FsbcAnalysisRepository fsbcAnalysisRepository,
             MotifAnalysisRepository motifAnalysisRepository,
             ExperimentRecordMapper experimentRecordMapper
     ) {
@@ -48,6 +51,7 @@ public class ExperimentPersistenceService {
         this.selectionCycleRecordRepository = selectionCycleRecordRepository;
         this.aptamerRecordRepository = aptamerRecordRepository;
         this.clusterAnalysisRepository = clusterAnalysisRepository;
+        this.fsbcAnalysisRepository = fsbcAnalysisRepository;
         this.motifAnalysisRepository = motifAnalysisRepository;
         this.experimentRecordMapper = experimentRecordMapper;
     }
@@ -118,6 +122,7 @@ public class ExperimentPersistenceService {
 
         // Remove dependent entities first to avoid foreign key violations.
         clusterAnalysisRepository.deleteByExperimentId(experimentId);
+        fsbcAnalysisRepository.deleteByExperimentId(experimentId);
         motifAnalysisRepository.deleteByExperimentId(experimentId);
 
         selectionCycleRecordRepository.deleteByIdExperimentId(experimentId);
