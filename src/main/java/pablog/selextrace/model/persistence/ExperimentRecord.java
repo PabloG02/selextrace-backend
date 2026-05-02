@@ -21,6 +21,22 @@ public class ExperimentRecord {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+        name = "created_by_user_id",
+        nullable = false,
+        updatable = false,
+        foreignKey = @ForeignKey(name = "fk_experiment_created_by_user")
+    )
+    private AppUserRecord createdByUser;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+        name = "project_id",
+        foreignKey = @ForeignKey(name = "fk_experiment_project")
+    )
+    private ProjectRecord project;
+
     // --- General information --- //
 
     @Column(nullable = false)
@@ -189,6 +205,22 @@ public class ExperimentRecord {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public AppUserRecord getCreatedByUser() {
+        return createdByUser;
+    }
+
+    public void setCreatedByUser(AppUserRecord createdByUser) {
+        this.createdByUser = createdByUser;
+    }
+
+    public ProjectRecord getProject() {
+        return project;
+    }
+
+    public void setProject(ProjectRecord project) {
+        this.project = project;
     }
 
     public ExperimentMetadataRecord getMetadataRecord() {

@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -11,9 +12,12 @@ import org.springframework.web.server.ResponseStatusException;
 import pablog.selextrace.config.ExperimentConfiguration;
 import pablog.selextrace.dto.CreateExperimentDtos;
 import pablog.selextrace.dto.ExperimentSummaryDTO;
+import pablog.selextrace.dto.auth.AuthDtos;
 import pablog.selextrace.dto.response.ExperimentDTO;
 import pablog.selextrace.mapper.ConfigurationMapper;
 import pablog.selextrace.model.persistence.ExperimentRecord;
+import pablog.selextrace.security.CurrentUserService;
+import pablog.selextrace.service.AuthorizationService;
 import pablog.selextrace.service.ExperimentPersistenceService;
 import pablog.selextrace.service.ExperimentProcessor;
 
@@ -28,23 +32,29 @@ public class ExperimentController {
 
     private final ConfigurationMapper configurationMapper;
     private final ExperimentPersistenceService experimentPersistenceService;
+    private final CurrentUserService currentUserService;
+    private final AuthorizationService authorizationService;
 
     public ExperimentController(
             ConfigurationMapper configurationMapper,
-            ExperimentPersistenceService experimentPersistenceService
+            ExperimentPersistenceService experimentPersistenceService,
+            CurrentUserService currentUserService,
+            AuthorizationService authorizationService
     ) {
         this.configurationMapper = configurationMapper;
         this.experimentPersistenceService = experimentPersistenceService;
+        this.currentUserService = currentUserService;
+        this.authorizationService = authorizationService;
     }
 
     @GetMapping
     public List<ExperimentSummaryDTO> getAllExperiments() {
-        return experimentPersistenceService.findExperimentSummaries();
+        return experimentPersistenceService.findExperimentSummaries(currentUserService.requireUser());
     }
 
     @GetMapping("/{id}")
     public ExperimentDTO getExperiment(@PathVariable String id) {
-        return experimentPersistenceService.findExperimentResponseById(id)
+        return experimentPersistenceService.findExperimentResponseById(id, currentUserService.requireUser())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Experiment not found in PostgreSQL"));
     }
 
@@ -55,6 +65,13 @@ public class ExperimentController {
 //            @RequestPart(value = "reverseFiles", required = false) Map<String, MultipartFile> reverseFiles
             HttpServletRequest request
     ) throws Exception {
+        var currentUser = currentUserService.requireUser();
+
+        String targetProjectId = dto.projectId();
+        if (StringUtils.hasText(targetProjectId)) {
+            authorizationService.assertCanManageProject(currentUser, targetProjectId);
+        }
+
         MultipartHttpServletRequest multipart = (MultipartHttpServletRequest) request;
 
         // Parse forwardFiles[r14] → forwardFiles map with key "r14"
@@ -76,11 +93,25 @@ public class ExperimentController {
         ExperimentProcessor processor = new ExperimentProcessor(config);
         processor.processData();
         ExperimentRecord record = processor.buildExperimentRecord();
-        return experimentPersistenceService.persistExperiment(record);
+        return experimentPersistenceService.persistExperiment(record, currentUser, targetProjectId);
+    }
+
+    @PatchMapping("/{id}/project")
+    public ExperimentDTO transferExperimentToProject(
+            @PathVariable String id,
+            @RequestBody AuthDtos.ExperimentProjectTransferRequest request
+    ) {
+        String targetProjectId = request == null ? null : request.projectId();
+        return experimentPersistenceService.transferExperimentToProject(
+                currentUserService.requireUser(),
+                id,
+                targetProjectId
+        );
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteExperiment(@PathVariable String id) {
+        authorizationService.assertCanManageExperiment(currentUserService.requireUser(), id);
         boolean deleted = experimentPersistenceService.deleteExperiment(id);
         if (!deleted) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Experiment not found in PostgreSQL");

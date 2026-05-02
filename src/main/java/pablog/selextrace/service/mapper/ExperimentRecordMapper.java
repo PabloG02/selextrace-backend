@@ -10,12 +10,14 @@ import pablog.selextrace.domain.pool.AptamerPool;
 import pablog.selextrace.domain.pool.InMemoryAptamerPool;
 import pablog.selextrace.dto.ExperimentSummaryDTO;
 import pablog.selextrace.dto.SelectionCycleResponseDTO;
+import pablog.selextrace.dto.project.ProjectDtos;
 import pablog.selextrace.dto.response.ExperimentDTO;
 import pablog.selextrace.dto.response.ExperimentImportStatsDTO;
 import pablog.selextrace.dto.response.ExperimentMetadataDTO;
 import pablog.selextrace.dto.response.ExperimentPoolDTO;
 import pablog.selextrace.dto.response.ExperimentSequencingDTO;
 import pablog.selextrace.dto.response.ExperimentTechnicalDetailsResponseDTO;
+import pablog.selextrace.model.auth.ResourceAccessLevel;
 import pablog.selextrace.model.persistence.AptamerRecord;
 import pablog.selextrace.model.persistence.ExperimentRecord;
 import pablog.selextrace.model.persistence.SelectionCycleRecord;
@@ -31,17 +33,27 @@ import java.util.Objects;
 @Component
 public class ExperimentRecordMapper {
 
-    public ExperimentSummaryDTO toSummaryDTO(ExperimentRecord record) {
+    public ExperimentSummaryDTO toSummaryDTO(
+            ExperimentRecord record,
+            ProjectDtos.ProjectReferenceDTO project,
+            ResourceAccessLevel accessLevel
+    ) {
         Objects.requireNonNull(record, "record is required");
         return new ExperimentSummaryDTO(
                 record.getId(),
                 record.getName(),
                 record.getDescription(),
-                record.getCreatedAt()
+                record.getCreatedAt(),
+                project,
+                accessLevel
         );
     }
 
-    public ExperimentDTO toExperimentDTO(ExperimentRecord record) {
+    public ExperimentDTO toExperimentDTO(
+            ExperimentRecord record,
+            ProjectDtos.ProjectReferenceDTO project,
+            ResourceAccessLevel accessLevel
+    ) {
         Objects.requireNonNull(record, "record is required");
 
         List<SelectionCycleRecord> safeCycles = record.getSelectionCycleRecords() == null
@@ -100,9 +112,11 @@ public class ExperimentRecordMapper {
 
         return new ExperimentDTO(
                 record.getId(),
-                record.getCreatedAt(),
                 record.getName(),
                 record.getDescription(),
+                record.getCreatedAt(),
+                project,
+                accessLevel,
                 sequencing,
                 importStats,
                 cycleResponses,

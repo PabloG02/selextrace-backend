@@ -1,6 +1,6 @@
 package pablog.selextrace.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import pablog.selextrace.dto.BppmResponseDTO;
@@ -11,10 +11,14 @@ import pablog.selextrace.service.PredictionService;
 @RestController
 @RequestMapping("/api/predictions")
 @CrossOrigin(origins = "*")
+@PreAuthorize("isAuthenticated()")
 public class PredictionController {
 
-    @Autowired
-    private PredictionService predictionService;
+    private final PredictionService predictionService;
+
+    public PredictionController(PredictionService predictionService) {
+        this.predictionService = predictionService;
+    }
 
     @GetMapping("/mfe")
     public MfeResponseDTO computeMfe(@RequestParam String sequence) {

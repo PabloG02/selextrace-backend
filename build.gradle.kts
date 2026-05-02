@@ -27,10 +27,12 @@ dependencies {
 	implementation(libs.fastutil)
 	// Spring Boot dependencies
 	implementation(libs.spring.boot.starter.data.jpa)
+	implementation(libs.spring.boot.starter.security)
 	implementation(libs.spring.boot.starter.webmvc)
 	runtimeOnly(libs.h2)
 	runtimeOnly(libs.postgresql)
 	testImplementation(libs.spring.boot.starter.data.jpa.test)
+	testImplementation(libs.spring.boot.starter.security.test)
 	testImplementation(libs.spring.boot.starter.webmvc.test)
 	testRuntimeOnly(libs.junit.platform.launcher)
 }

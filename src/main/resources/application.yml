@@ -30,3 +30,8 @@ spring:
 selextrace:
   files:
     upload-dir: "./.data/files-spring"
+  security:
+    allowed-origins:
+      - "http://localhost:4200"
+      - "http://127.0.0.1:4200"
+      - "https://pablog02.github.io/"

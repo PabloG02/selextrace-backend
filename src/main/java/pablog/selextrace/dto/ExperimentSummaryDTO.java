@@ -1,5 +1,8 @@
 package pablog.selextrace.dto;
 
+import pablog.selextrace.dto.project.ProjectDtos;
+import pablog.selextrace.model.auth.ResourceAccessLevel;
+
 import java.time.Instant;
 
 /**
@@ -10,5 +13,7 @@ public record ExperimentSummaryDTO(
         String id,
         String name,
         String description,
-        Instant createdAt
+        Instant createdAt,
+        ProjectDtos.ProjectReferenceDTO project,
+        ResourceAccessLevel accessLevel
 ) {}
