@@ -78,6 +78,6 @@ public class AuthDtos {
     ) {}
 
     public record ExperimentProjectTransferRequest(
-            String projectId
+            Long projectId
     ) {}
 }

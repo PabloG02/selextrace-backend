@@ -3,7 +3,6 @@ package pablog.selextrace.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 import pablog.selextrace.dto.BppmResponseDTO;
 import pablog.selextrace.dto.ContextProbabilityResponseDTO;
@@ -16,6 +15,7 @@ import pablog.selextrace.lib.rnafold.Index;
 import pablog.selextrace.lib.rnafold.MFEData;
 import pablog.selextrace.lib.rnafold.RNAFoldAPI;
 import pablog.selextrace.model.StructurePredictionAnalysis;
+import pablog.selextrace.repository.ExperimentRecordRepository;
 import pablog.selextrace.repository.StructurePredictionAnalysisRepository;
 
 import java.util.ArrayList;
@@ -33,13 +33,16 @@ public class PredictionService {
     private static final Logger log = LoggerFactory.getLogger(PredictionService.class);
 
     private final StructurePredictionAnalysisRepository structurePredictionAnalysisRepository;
+    private final ExperimentRecordRepository experimentRecordRepository;
     private final ExperimentPersistenceService experimentPersistenceService;
 
     public PredictionService(
             StructurePredictionAnalysisRepository structurePredictionAnalysisRepository,
+            ExperimentRecordRepository experimentRecordRepository,
             ExperimentPersistenceService experimentPersistenceService
     ) {
         this.structurePredictionAnalysisRepository = structurePredictionAnalysisRepository;
+        this.experimentRecordRepository = experimentRecordRepository;
         this.experimentPersistenceService = experimentPersistenceService;
     }
 
@@ -110,7 +113,7 @@ public class PredictionService {
         return new ContextProbabilityResponseDTO(hairpin, bulge, internal, multi, dangling, paired);
     }
 
-    public StructurePool getStructurePool(String experimentId, boolean createIfMissing) {
+    public StructurePool getStructurePool(Long experimentId, boolean createIfMissing) {
         validateExperimentId(experimentId);
 
         Experiment experiment = experimentPersistenceService.findExperimentById(experimentId)
@@ -133,7 +136,7 @@ public class PredictionService {
         return structurePool;
     }
 
-    private StructurePredictionAnalysis createStructureAnalysis(String experimentId, Experiment experiment) {
+    private StructurePredictionAnalysis createStructureAnalysis(Long experimentId, Experiment experiment) {
         long startTimeMs = System.currentTimeMillis();
         StructurePool structurePool = computeStructurePool(experiment);
         long elapsedTimeMs = System.currentTimeMillis() - startTimeMs;
@@ -142,7 +145,11 @@ public class PredictionService {
         Map<Integer, double[]> aptamerToStructureProfile = StreamSupport.stream(structurePool.iterator().spliterator(), false)
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
-        StructurePredictionAnalysis analysis = new StructurePredictionAnalysis(experimentId, aptamerToStructureProfile, elapsedTimeMs);
+        StructurePredictionAnalysis analysis = new StructurePredictionAnalysis(
+            experimentRecordRepository.getReferenceById(experimentId),
+            aptamerToStructureProfile,
+            elapsedTimeMs
+        );
         return structurePredictionAnalysisRepository.save(analysis);
     }
 
@@ -164,8 +171,8 @@ public class PredictionService {
         return structurePool;
     }
 
-    private void validateExperimentId(String experimentId) {
-        if (!StringUtils.hasText(experimentId)) {
+    private void validateExperimentId(Long experimentId) {
+        if (experimentId == null) {
             throw new IllegalArgumentException("Experiment id is required");
         }
     }

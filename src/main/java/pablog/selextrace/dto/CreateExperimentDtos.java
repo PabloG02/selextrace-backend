@@ -18,7 +18,7 @@ public class CreateExperimentDtos {
     public record CreateExperimentDto(
             String name,
             String description,
-            String projectId,
+            Long projectId,
             ExperimentSequencing sequencing,
             List<SelectionCycle> selectionCycles
     ) {}

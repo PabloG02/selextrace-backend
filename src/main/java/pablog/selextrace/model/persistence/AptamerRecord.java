@@ -29,11 +29,11 @@ public class AptamerRecord {
         this.id = id;
     }
 
-    public String getExperimentId() {
+    public Long getExperimentId() {
         return id == null ? null : id.getExperimentId();
     }
 
-    public void setExperimentId(String experimentId) {
+    public void setExperimentId(Long experimentId) {
         if (id == null) {
             id = new AptamerRecordId();
         }

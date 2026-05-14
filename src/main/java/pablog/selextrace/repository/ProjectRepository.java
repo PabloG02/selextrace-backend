@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository;
 import pablog.selextrace.model.persistence.ProjectRecord;
 
 @Repository
-public interface ProjectRepository extends JpaRepository<ProjectRecord, String> {
+public interface ProjectRepository extends JpaRepository<ProjectRecord, Long> {
 }

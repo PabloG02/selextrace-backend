@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface FsbcAnalysisRepository extends JpaRepository<FsbcAnalysis, String> {
+public interface FsbcAnalysisRepository extends JpaRepository<FsbcAnalysis, Long> {
 
-    List<FsbcAnalysis> findByExperimentId(String experimentId);
+    List<FsbcAnalysis> findByExperimentId(Long experimentId);
 
-    Optional<FsbcAnalysis> findByIdAndExperimentId(String id, String experimentId);
+    Optional<FsbcAnalysis> findByIdAndExperimentId(Long id, Long experimentId);
 
-    long deleteByIdAndExperimentId(String id, String experimentId);
+    long deleteByIdAndExperimentId(Long id, Long experimentId);
 
-    long deleteByExperimentId(String experimentId);
+    long deleteByExperimentId(Long experimentId);
 }

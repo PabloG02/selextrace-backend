@@ -3,7 +3,7 @@ package pablog.selextrace.controller;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pablog.selextrace.config.FsbcConfiguration;
-import pablog.selextrace.model.FsbcAnalysis;
+import pablog.selextrace.dto.response.FsbcAnalysisDTO;
 import pablog.selextrace.service.FsbcAnalysisService;
 
 import java.util.List;
@@ -21,20 +21,20 @@ public class FsbcController {
 
     @GetMapping
     @PreAuthorize("hasPermission(#experimentId, 'experiment', 'view')")
-    public List<FsbcAnalysis> listAnalyses(@PathVariable String experimentId) {
+    public List<FsbcAnalysisDTO> listAnalyses(@PathVariable Long experimentId) {
         return fsbcAnalysisService.listAnalyses(experimentId);
     }
 
     @GetMapping("/{analysisId}")
     @PreAuthorize("hasPermission(#experimentId, 'experiment', 'view')")
-    public FsbcAnalysis getAnalysis(@PathVariable String experimentId, @PathVariable String analysisId) {
+    public FsbcAnalysisDTO getAnalysis(@PathVariable Long experimentId, @PathVariable Long analysisId) {
         return fsbcAnalysisService.getAnalysis(experimentId, analysisId);
     }
 
     @PostMapping
     @PreAuthorize("hasPermission(#experimentId, 'experiment', 'manage')")
-    public FsbcAnalysis createAnalysis(
-            @PathVariable String experimentId,
+    public FsbcAnalysisDTO createAnalysis(
+            @PathVariable Long experimentId,
             @RequestBody(required = false) FsbcConfiguration request
     ) {
         return fsbcAnalysisService.createAnalysis(experimentId, request);
@@ -42,7 +42,7 @@ public class FsbcController {
 
     @DeleteMapping("/{analysisId}")
     @PreAuthorize("hasPermission(#experimentId, 'experiment', 'manage')")
-    public void deleteAnalysis(@PathVariable String experimentId, @PathVariable String analysisId) {
+    public void deleteAnalysis(@PathVariable Long experimentId, @PathVariable Long analysisId) {
         fsbcAnalysisService.deleteAnalysis(experimentId, analysisId);
     }
 }

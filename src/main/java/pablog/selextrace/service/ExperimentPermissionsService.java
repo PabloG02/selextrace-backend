@@ -41,7 +41,7 @@ public class ExperimentPermissionsService {
     }
 
     @Transactional
-    public List<AccessDtos.ExperimentAccessGrantDTO> listAccess(AppUserRecord currentUser, String experimentId) {
+    public List<AccessDtos.ExperimentAccessGrantDTO> listAccess(AppUserRecord currentUser, Long experimentId) {
         authorizationService.assertCanManageExperiment(currentUser, experimentId);
         return experimentPermissionRecordRepository.findAllByExperiment_Id(experimentId)
                 .stream()
@@ -64,7 +64,7 @@ public class ExperimentPermissionsService {
     @Transactional
     public List<AccessDtos.ExperimentAccessGrantDTO> upsertAccess(
             AppUserRecord currentUser,
-            String experimentId,
+            Long experimentId,
             AuthDtos.ExperimentAccessGrantRequest request
     ) {
         authorizationService.assertCanManageExperiment(currentUser, experimentId);
@@ -76,7 +76,7 @@ public class ExperimentPermissionsService {
     }
 
     @Transactional
-    void grantAccess(String experimentId, String userId, ResourceAccessLevel accessLevel, String grantedByUserId) {
+    void grantAccess(Long experimentId, String userId, ResourceAccessLevel accessLevel, String grantedByUserId) {
         ExperimentRecord experiment = experimentRecordRepository.getReferenceById(experimentId);
         ExperimentPermissionRecord grant = experimentPermissionRecordRepository
                 .findByExperiment_IdAndUser_Id(experimentId, userId)
@@ -89,7 +89,7 @@ public class ExperimentPermissionsService {
     }
 
     @Transactional
-    public void removeAccess(AppUserRecord currentUser, String experimentId, String userId) {
+    public void removeAccess(AppUserRecord currentUser, Long experimentId, String userId) {
         authorizationService.assertCanManageExperiment(currentUser, experimentId);
         experimentPermissionRecordRepository.deleteByExperiment_IdAndUser_Id(experimentId, userId);
     }

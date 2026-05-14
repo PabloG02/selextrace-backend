@@ -41,15 +41,12 @@ public class ExperimentProcessor {
 
         log.info("Initializing experiment: {}", config.Experiment.name);
 
-        // Use ExperimentFactory to create the Experiment (delegates construction + validation).
         ExperimentFactory factory = new ExperimentFactory();
         experiment = factory.createExperiment(config);
 
         log.info("Experiment initialized successfully: {}", experiment.getName());
-
         log.info("Initializing parser: {}", config.AptaplexParser.backend.getName());
 
-        // Initialize parser
         parser = new AptaPlexParser(config, experiment);
 
         // Optional: assign forward/reverse files if configured
@@ -57,11 +54,9 @@ public class ExperimentProcessor {
         // parser.reverseFiles = config.AptaplexParser.reverseFiles;
 
         log.info("Parser initialized: {}", config.AptaplexParser.backend.getName());
-
-        // Run parser
         log.info("Starting AptaPlex processing...");
-        long startTime = System.currentTimeMillis();
 
+        long startTime = System.currentTimeMillis();
         parser.run();
 
         double elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000.0;
@@ -91,42 +86,33 @@ public class ExperimentProcessor {
         record.setTotalPrimerOverlaps(progress.totalPrimerOverlaps.get());
 
         ExperimentMetadataRecord metadataRecord = new ExperimentMetadataRecord();
-        metadataRecord.setExperimentId(record.getId());
         metadataRecord.setMetadata(experiment.getMetadata());
         record.setMetadataRecord(metadataRecord);
 
-        Set<SelectionCycleRecord> selectionCycleRecords = new LinkedHashSet<>();
         for (SelectionCycle cycle : experiment.getSelectionCycles()) {
             if (cycle == null) {
                 continue;
             }
-
-            SelectionCycleRecord selectionCycleRecord = new SelectionCycleRecord();
-            selectionCycleRecord.setExperimentId(record.getId());
-            selectionCycleRecord.setName(cycle.getName());
-            selectionCycleRecord.setRound(cycle.getRound());
-            selectionCycleRecord.setControlSelection(cycle.isControlSelection());
-            selectionCycleRecord.setCounterSelection(cycle.isCounterSelection());
-            selectionCycleRecord.setBarcode5Prime(Optional.ofNullable(cycle.getBarcodeFivePrime()).map(String::new).orElse(null));
-            selectionCycleRecord.setBarcode3Prime(Optional.ofNullable(cycle.getBarcodeThreePrime()).map(String::new).orElse(null));
-            selectionCycleRecord.setTotalSize(cycle.getSize());
-            selectionCycleRecord.setUniqueSize(cycle.getUniqueSize());
-            selectionCycleRecord.setCounts(StreamSupport.stream(cycle.iterator().spliterator(), false)
+            SelectionCycleRecord cycleRecord = new SelectionCycleRecord();
+            cycleRecord.setName(cycle.getName());
+            cycleRecord.setRound(cycle.getRound());
+            cycleRecord.setControlSelection(cycle.isControlSelection());
+            cycleRecord.setCounterSelection(cycle.isCounterSelection());
+            cycleRecord.setBarcode5Prime(Optional.ofNullable(cycle.getBarcodeFivePrime()).map(String::new).orElse(null));
+            cycleRecord.setBarcode3Prime(Optional.ofNullable(cycle.getBarcodeThreePrime()).map(String::new).orElse(null));
+            cycleRecord.setTotalSize(cycle.getSize());
+            cycleRecord.setUniqueSize(cycle.getUniqueSize());
+            cycleRecord.setCounts(StreamSupport.stream(cycle.iterator().spliterator(), false)
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-            selectionCycleRecords.add(selectionCycleRecord);
+            record.addSelectionCycle(cycleRecord);
         }
-        record.setSelectionCycleRecords(selectionCycleRecords);
 
         Set<AptamerRecord> aptamerRecords = new LinkedHashSet<>();
         Map<Integer, String> idToAptamer = StreamSupport.stream(
-                        experiment.getPool().inverse_view_iterator().spliterator(),
-                        false
-                )
+                        experiment.getPool().inverse_view_iterator().spliterator(), false)
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> new String(e.getValue(), StandardCharsets.UTF_8)));
         Map<Integer, AptamerBounds> idToBounds = StreamSupport.stream(
-                        experiment.getPool().bounds_iterator().spliterator(),
-                        false
-                )
+                        experiment.getPool().bounds_iterator().spliterator(), false)
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> new AptamerBounds(e.getValue())));
 
         for (Map.Entry<Integer, String> entry : idToAptamer.entrySet()) {
@@ -139,7 +125,6 @@ public class ExperimentProcessor {
             }
 
             AptamerRecord aptamerRecord = new AptamerRecord();
-            aptamerRecord.setExperimentId(record.getId());
             aptamerRecord.setAptamerNumericId(aptamerId);
             aptamerRecord.setSequence(sequence);
             aptamerRecord.setStartIndex(bounds.startIndex);

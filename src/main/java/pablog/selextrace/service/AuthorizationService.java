@@ -38,12 +38,12 @@ public class AuthorizationService {
         return user.getSystemRole() == SystemRole.ADMIN;
     }
 
-    public boolean canViewProject(AppUserRecord user, String projectId) {
+    public boolean canViewProject(AppUserRecord user, Long projectId) {
         return isAdminUser(user)
                 || projectMembershipRepository.findByProject_IdAndUser_Id(projectId, user.getId()).isPresent();
     }
 
-    public boolean canManageProject(AppUserRecord user, String projectId) {
+    public boolean canManageProject(AppUserRecord user, Long projectId) {
         return isAdminUser(user)
                 || projectMembershipRepository.findByProject_IdAndUser_Id(projectId, user.getId())
                 .map(ProjectMembershipRecord::getAccessLevel)
@@ -51,7 +51,7 @@ public class AuthorizationService {
                 .orElse(false);
     }
 
-    public boolean canViewExperiment(AppUserRecord user, String experimentId) {
+    public boolean canViewExperiment(AppUserRecord user, Long experimentId) {
         if (isAdminUser(user)) {
             return true;
         }
@@ -69,7 +69,7 @@ public class AuthorizationService {
         return experimentPermissionRecordRepository.findByExperiment_IdAndUser_Id(experimentId, user.getId()).isPresent();
     }
 
-    public boolean canManageExperiment(AppUserRecord user, String experimentId) {
+    public boolean canManageExperiment(AppUserRecord user, Long experimentId) {
         if (isAdminUser(user)) {
             return true;
         }
@@ -90,7 +90,7 @@ public class AuthorizationService {
                 .orElse(false);
     }
 
-    public Optional<ResourceAccessLevel> getProjectAccessLevel(AppUserRecord user, String projectId) {
+    public Optional<ResourceAccessLevel> getProjectAccessLevel(AppUserRecord user, Long projectId) {
         if (isAdminUser(user)) {
             return Optional.of(ResourceAccessLevel.MANAGER);
         }
@@ -113,13 +113,13 @@ public class AuthorizationService {
     }
 
 
-    public void assertCanManageProject(AppUserRecord user, String projectId) {
+    public void assertCanManageProject(AppUserRecord user, Long projectId) {
         if (!canManageProject(user, projectId)) {
             throw new ResponseStatusException(FORBIDDEN, "You do not have permission to manage this project");
         }
     }
 
-    public void assertCanManageExperiment(AppUserRecord user, String experimentId) {
+    public void assertCanManageExperiment(AppUserRecord user, Long experimentId) {
         if (experimentRecordRepository.findById(experimentId).isEmpty()) {
             throw new ResponseStatusException(NOT_FOUND, "Experiment not found");
         }

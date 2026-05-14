@@ -30,7 +30,7 @@ public class AppPermissionEvaluator implements PermissionEvaluator {
     // Used when the ID and Type are passed: hasPermission(#experimentId, 'Experiment', 'VIEW')
     @Override
     public boolean hasPermission(Authentication auth, Serializable targetId, String targetType, Object permission) {
-        if (!(auth.getPrincipal() instanceof AuthenticatedUser principal) || !(targetId instanceof String id) || !(permission instanceof String)) {
+        if (!(auth.getPrincipal() instanceof AuthenticatedUser principal) || !(targetId instanceof Long id) || !(permission instanceof String)) {
             return false;
         }
 

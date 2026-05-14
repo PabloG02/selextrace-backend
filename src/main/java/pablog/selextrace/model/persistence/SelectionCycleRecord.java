@@ -1,10 +1,9 @@
 package pablog.selextrace.model.persistence;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.type.SqlTypes;
 
 import java.util.HashMap;
@@ -16,6 +15,12 @@ public class SelectionCycleRecord {
 
     @EmbeddedId
     private SelectionCycleRecordId id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId("experimentId")
+    @JoinColumn(name = "experiment_id", nullable = false, updatable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private ExperimentRecord experiment;
 
     @Column(nullable = false)
     private int round;
@@ -48,11 +53,11 @@ public class SelectionCycleRecord {
         this.id = id;
     }
 
-    public String getExperimentId() {
+    public Long getExperimentId() {
         return id == null ? null : id.getExperimentId();
     }
 
-    public void setExperimentId(String experimentId) {
+    protected void setExperimentId(Long experimentId) {
         if (id == null) {
             id = new SelectionCycleRecordId();
         }
@@ -68,6 +73,17 @@ public class SelectionCycleRecord {
             id = new SelectionCycleRecordId();
         }
         id.setName(name);
+    }
+
+    public ExperimentRecord getExperiment() {
+        return experiment;
+    }
+
+    protected void setExperiment(ExperimentRecord experiment) {
+        this.experiment = experiment;
+        if (experiment != null) {
+            setExperimentId(experiment.getId());
+        }
     }
 
     public int getRound() {

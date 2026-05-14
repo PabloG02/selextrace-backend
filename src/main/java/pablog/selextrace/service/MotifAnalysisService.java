@@ -2,14 +2,15 @@ package pablog.selextrace.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 import pablog.selextrace.config.AptaTraceConfiguration;
 import pablog.selextrace.domain.experiment.Experiment;
 import pablog.selextrace.domain.pool.StructurePool;
+import pablog.selextrace.dto.response.MotifAnalysisDTO;
 import pablog.selextrace.model.MotifAnalysis;
 import pablog.selextrace.motif.AptaTraceMotif;
 import pablog.selextrace.motif.MotifAnalysisRun;
+import pablog.selextrace.repository.ExperimentRecordRepository;
 import pablog.selextrace.repository.MotifAnalysisRepository;
 
 import java.util.List;
@@ -20,39 +21,45 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class MotifAnalysisService {
 
     private final MotifAnalysisRepository motifAnalysisRepository;
+    private final ExperimentRecordRepository experimentRecordRepository;
     private final ExperimentPersistenceService experimentPersistenceService;
     private final PredictionService predictionService;
     private final AptaTraceMotif aptaTraceMotif;
 
     public MotifAnalysisService(
             MotifAnalysisRepository motifAnalysisRepository,
+            ExperimentRecordRepository experimentRecordRepository,
             ExperimentPersistenceService experimentPersistenceService,
             PredictionService predictionService,
             AptaTraceMotif aptaTraceMotif
     ) {
         this.motifAnalysisRepository = motifAnalysisRepository;
+        this.experimentRecordRepository = experimentRecordRepository;
         this.experimentPersistenceService = experimentPersistenceService;
         this.predictionService = predictionService;
         this.aptaTraceMotif = aptaTraceMotif;
     }
 
-    public List<MotifAnalysis> listAnalyses(String experimentId) {
+    public List<MotifAnalysisDTO> listAnalyses(Long experimentId) {
         validateExperimentId(experimentId);
         ensureExperimentExists(experimentId);
-        return motifAnalysisRepository.findByExperimentId(experimentId);
+        return motifAnalysisRepository.findByExperimentId(experimentId).stream()
+                .map(MotifAnalysisDTO::from)
+                .toList();
     }
 
-    public MotifAnalysis getAnalysis(String experimentId, String analysisId) {
+    public MotifAnalysisDTO getAnalysis(Long experimentId, Long analysisId) {
         validateExperimentId(experimentId);
-        if (!StringUtils.hasText(analysisId)) {
+        if (analysisId == null) {
             throw new IllegalArgumentException("Analysis ID is required");
         }
 
         return motifAnalysisRepository.findByIdAndExperimentId(analysisId, experimentId)
+                .map(MotifAnalysisDTO::from)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Motif analysis not found"));
     }
 
-    public MotifAnalysis createAnalysis(String experimentId, AptaTraceConfiguration request) {
+    public MotifAnalysisDTO createAnalysis(Long experimentId, AptaTraceConfiguration request) {
         validateExperimentId(experimentId);
 
         Experiment experiment = experimentPersistenceService.findExperimentById(experimentId)
@@ -66,7 +73,7 @@ public class MotifAnalysisService {
         long durationMs = System.currentTimeMillis() - startMs;
 
         MotifAnalysis analysis = new MotifAnalysis(
-                experimentId,
+                experimentRecordRepository.getReferenceById(experimentId),
                 config,
                 run.roundNames(),
                 run.profiles(),
@@ -75,13 +82,13 @@ public class MotifAnalysisService {
                 durationMs
         );
 
-        return motifAnalysisRepository.save(analysis);
+        return MotifAnalysisDTO.from(motifAnalysisRepository.save(analysis));
     }
 
     @Transactional
-    public void deleteAnalysis(String experimentId, String analysisId) {
+    public void deleteAnalysis(Long experimentId, Long analysisId) {
         validateExperimentId(experimentId);
-        if (!StringUtils.hasText(analysisId)) {
+        if (analysisId == null) {
             throw new IllegalArgumentException("Analysis ID is required");
         }
 
@@ -92,13 +99,13 @@ public class MotifAnalysisService {
         }
     }
 
-    private void validateExperimentId(String experimentId) {
-        if (!StringUtils.hasText(experimentId)) {
+    private void validateExperimentId(Long experimentId) {
+        if (experimentId == null) {
             throw new IllegalArgumentException("Experiment id is required");
         }
     }
 
-    private void ensureExperimentExists(String experimentId) {
+    private void ensureExperimentExists(Long experimentId) {
         if (!experimentPersistenceService.existsExperiment(experimentId)) {
             throw new ResponseStatusException(NOT_FOUND, "Experiment not found");
         }

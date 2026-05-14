@@ -16,10 +16,8 @@ import pablog.selextrace.repository.ProjectRepository;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
@@ -59,7 +57,7 @@ public class ProjectService {
                 .toList();
     }
 
-    public ProjectDtos.ProjectDetailDTO getProject(AppUserRecord currentUser, String projectId) {
+    public ProjectDtos.ProjectDetailDTO getProject(AppUserRecord currentUser, Long projectId) {
         ProjectRecord project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Project not found"));
 
@@ -72,7 +70,6 @@ public class ProjectService {
     @Transactional
     public ProjectDtos.ProjectDetailDTO createProject(AppUserRecord currentUser, AuthDtos.ProjectRequest request) {
         ProjectRecord project = new ProjectRecord();
-        project.setId(UUID.randomUUID().toString());
         project.setName(requiredValue(request.name(), "Project name is required"));
         project.setDescription(blankToNull(request.description()));
         project.setCreatedByUser(userRepository.getReferenceById(currentUser.getId()));
@@ -90,7 +87,7 @@ public class ProjectService {
     @Transactional
     public ProjectDtos.ProjectDetailDTO updateProject(
             AppUserRecord currentUser,
-            String projectId,
+            Long projectId,
             AuthDtos.ProjectRequest request
     ) {
         ProjectRecord project = projectRepository.findById(projectId)
@@ -104,7 +101,7 @@ public class ProjectService {
     @Transactional
     public ProjectDtos.ProjectDetailDTO upsertMembership(
             AppUserRecord currentUser,
-            String projectId,
+            Long projectId,
             AuthDtos.ProjectMembershipRequest request
     ) {
         ProjectRecord project = projectRepository.findById(projectId)
@@ -124,11 +121,11 @@ public class ProjectService {
     }
 
     @Transactional
-    public void removeMembership(String projectId, String userId) {
+    public void removeMembership(Long projectId, String userId) {
         projectMembershipRepository.deleteByProject_IdAndUser_Id(projectId, userId);
     }
 
-    public List<ProjectDtos.ProjectMembershipDTO> listMemberships(String projectId) {
+    public List<ProjectDtos.ProjectMembershipDTO> listMemberships(Long projectId) {
         return projectMembershipRepository.findAllByProject_Id(projectId)
                 .stream()
                 .map(ProjectDtos.ProjectMembershipDTO::from)

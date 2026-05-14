@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MotifAnalysisRepository extends JpaRepository<MotifAnalysis, String> {
+public interface MotifAnalysisRepository extends JpaRepository<MotifAnalysis, Long> {
 
-    List<MotifAnalysis> findByExperimentId(String experimentId);
+    List<MotifAnalysis> findByExperimentId(Long experimentId);
 
-    Optional<MotifAnalysis> findByIdAndExperimentId(String id, String experimentId);
+    Optional<MotifAnalysis> findByIdAndExperimentId(Long id, Long experimentId);
 
-    long deleteByIdAndExperimentId(String id, String experimentId);
+    long deleteByIdAndExperimentId(Long id, Long experimentId);
 
-    long deleteByExperimentId(String experimentId);
+    long deleteByExperimentId(Long experimentId);
 }

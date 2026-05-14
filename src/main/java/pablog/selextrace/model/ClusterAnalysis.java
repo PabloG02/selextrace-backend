@@ -2,23 +2,33 @@ package pablog.selextrace.model;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import pablog.selextrace.config.AptaClusterConfiguration;
+import pablog.selextrace.model.persistence.ExperimentRecord;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Entity
 @Table(name = "cluster_analyses")
 public class ClusterAnalysis {
 
     @Id
-    @Column(nullable = false, updatable = false, length = 36)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false, updatable = false)
+    private Long id;
 
-    @Column(nullable = false, length = 36)
-    private String experimentId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+        name = "experiment_id",
+        nullable = false,
+        updatable = false,
+        foreignKey = @ForeignKey(name = "fk_cluster_analysis_experiment")
+    )
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private ExperimentRecord experiment;
 
     @AttributeOverrides({
             @AttributeOverride(name = "randomizedRegionSize", column = @Column(name = "config_randomized_region_size", nullable = false)),
@@ -35,6 +45,7 @@ public class ClusterAnalysis {
     @CollectionTable(name = "cluster_analysis_assignments", joinColumns = @JoinColumn(name = "id"))
     @MapKeyColumn(name = "aptamer_id")
     @Column(name = "cluster_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Map<Integer, Integer> aptamerToCluster = new HashMap<>();
 
     @Column(nullable = false)
@@ -48,31 +59,31 @@ public class ClusterAnalysis {
     }
 
     public ClusterAnalysis(
-            String experimentId,
+            ExperimentRecord experiment,
             AptaClusterConfiguration requestConfig,
             Map<Integer, Integer> aptamerToCluster,
             long durationMs
     ) {
-        this.experimentId = experimentId;
+        this.experiment = experiment;
         this.requestConfig = requestConfig;
         this.aptamerToCluster = aptamerToCluster;
         this.durationMs = durationMs;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public String getExperimentId() {
-        return experimentId;
+    public ExperimentRecord getExperiment() {
+        return experiment;
     }
 
-    public void setExperimentId(String experimentId) {
-        this.experimentId = experimentId;
+    public void setExperiment(ExperimentRecord experiment) {
+        this.experiment = experiment;
     }
 
     public AptaClusterConfiguration getRequestConfig() {
@@ -107,10 +118,5 @@ public class ClusterAnalysis {
         this.createdAt = createdAt;
     }
 
-    @PrePersist
-    public void assignIdIfMissing() {
-        if (id == null || id.isBlank()) {
-            id = UUID.randomUUID().toString();
-        }
-    }
+
 }

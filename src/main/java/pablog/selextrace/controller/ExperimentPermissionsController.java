@@ -31,13 +31,13 @@ public class ExperimentPermissionsController {
     }
 
     @GetMapping
-    public List<AccessDtos.ExperimentAccessGrantDTO> listAccess(@PathVariable String experimentId) {
+    public List<AccessDtos.ExperimentAccessGrantDTO> listAccess(@PathVariable Long experimentId) {
         return experimentPermissionsService.listAccess(currentUserService.requireUser(), experimentId);
     }
 
     @PostMapping
     public List<AccessDtos.ExperimentAccessGrantDTO> upsertAccess(
-            @PathVariable String experimentId,
+            @PathVariable Long experimentId,
             @RequestBody AuthDtos.ExperimentAccessGrantRequest request
     ) {
         return experimentPermissionsService.upsertAccess(currentUserService.requireUser(), experimentId, request);
@@ -45,7 +45,7 @@ public class ExperimentPermissionsController {
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> removeAccess(
-            @PathVariable String experimentId,
+            @PathVariable Long experimentId,
             @PathVariable String userId
     ) {
         experimentPermissionsService.removeAccess(currentUserService.requireUser(), experimentId, userId);

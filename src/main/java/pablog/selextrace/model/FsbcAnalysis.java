@@ -1,39 +1,36 @@
 package pablog.selextrace.model;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.OrderColumn;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import pablog.selextrace.config.FsbcConfiguration;
+import pablog.selextrace.model.persistence.ExperimentRecord;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Entity
 @Table(name = "fsbc_analyses")
 public class FsbcAnalysis {
 
     @Id
-    @Column(nullable = false, updatable = false, length = 36)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false, updatable = false)
+    private Long id;
 
-    @Column(nullable = false, length = 36)
-    private String experimentId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+        name = "experiment_id",
+        nullable = false,
+        updatable = false,
+        foreignKey = @ForeignKey(name = "fk_fsbc_analysis_experiment")
+    )
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private ExperimentRecord experiment;
 
     @AttributeOverrides({
             @AttributeOverride(name = "selectionCycleRound", column = @Column(name = "config_selection_cycle_round", nullable = false)),
@@ -49,16 +46,19 @@ public class FsbcAnalysis {
     @CollectionTable(name = "fsbc_analysis_assignments", joinColumns = @JoinColumn(name = "analysis_id"))
     @MapKeyColumn(name = "aptamer_id")
     @Column(name = "cluster_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Map<Integer, Integer> aptamerToCluster = new HashMap<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "fsbc_analysis_strings", joinColumns = @JoinColumn(name = "analysis_id"))
     @OrderColumn(name = "string_index")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<FsbcStringResult> rankedStrings = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "fsbc_analysis_cluster_seeds", joinColumns = @JoinColumn(name = "analysis_id"))
     @OrderColumn(name = "cluster_index")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<FsbcClusterSeed> clusterSeeds = new ArrayList<>();
 
     @Column(nullable = false)
@@ -84,7 +84,7 @@ public class FsbcAnalysis {
     }
 
     public FsbcAnalysis(
-            String experimentId,
+            ExperimentRecord experiment,
             FsbcConfiguration requestConfig,
             Map<Integer, Integer> aptamerToCluster,
             List<FsbcStringResult> rankedStrings,
@@ -93,7 +93,7 @@ public class FsbcAnalysis {
             int uniqueSequenceCount,
             long durationMs
     ) {
-        this.experimentId = experimentId;
+        this.experiment = experiment;
         this.requestConfig = requestConfig;
         this.aptamerToCluster = aptamerToCluster == null ? new HashMap<>() : new HashMap<>(aptamerToCluster);
         setRankedStrings(rankedStrings);
@@ -103,20 +103,20 @@ public class FsbcAnalysis {
         this.durationMs = durationMs;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public String getExperimentId() {
-        return experimentId;
+    public ExperimentRecord getExperiment() {
+        return experiment;
     }
 
-    public void setExperimentId(String experimentId) {
-        this.experimentId = experimentId;
+    public void setExperiment(ExperimentRecord experiment) {
+        this.experiment = experiment;
     }
 
     public FsbcConfiguration getRequestConfig() {
@@ -202,10 +202,7 @@ public class FsbcAnalysis {
     }
 
     @PrePersist
-    public void assignIdIfMissing() {
-        if (id == null || id.isBlank()) {
-            id = UUID.randomUUID().toString();
-        }
+    public void calculateCounts() {
         clusterCount = clusterSeeds == null ? 0 : clusterSeeds.size();
         stringCount = rankedStrings == null ? 0 : rankedStrings.size();
     }

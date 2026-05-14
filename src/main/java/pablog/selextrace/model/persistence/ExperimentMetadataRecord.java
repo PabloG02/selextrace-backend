@@ -1,10 +1,9 @@
 package pablog.selextrace.model.persistence;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.type.SqlTypes;
 import pablog.selextrace.domain.metadata.Metadata;
 
@@ -13,19 +12,32 @@ import pablog.selextrace.domain.metadata.Metadata;
 public class ExperimentMetadataRecord {
 
     @Id
-    @Column(nullable = false, updatable = false, length = 36)
-    private String experimentId;
+    @Column(nullable = false, updatable = false)
+    private Long experimentId;
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId
+    @JoinColumn(name = "experiment_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private ExperimentRecord experiment;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
     private Metadata metadata;
 
-    public String getExperimentId() {
+    public Long getExperimentId() {
         return experimentId;
     }
 
-    public void setExperimentId(String experimentId) {
-        this.experimentId = experimentId;
+    public ExperimentRecord getExperiment() {
+        return experiment;
+    }
+
+    protected void setExperiment(ExperimentRecord experiment) {
+        this.experiment = experiment;
+        if (experiment != null) {
+            this.experimentId = experiment.getId();
+        }
     }
 
     public Metadata getMetadata() {

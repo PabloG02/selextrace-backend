@@ -1,39 +1,36 @@
 package pablog.selextrace.model;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OrderColumn;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import pablog.selextrace.config.AptaTraceConfiguration;
 import pablog.selextrace.converter.CompressedMotifAnalysisProfileListConverter;
+import pablog.selextrace.model.persistence.ExperimentRecord;
 import pablog.selextrace.motif.MotifAnalysisProfile;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "motif_analyses")
 public class MotifAnalysis {
 
     @Id
-    @Column(nullable = false, updatable = false, length = 36)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false, updatable = false)
+    private Long id;
 
-    @Column(nullable = false, length = 36)
-    private String experimentId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+        name = "experiment_id",
+        nullable = false,
+        updatable = false,
+        foreignKey = @ForeignKey(name = "fk_motif_analysis_experiment")
+    )
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private ExperimentRecord experiment;
 
     @AttributeOverrides({
             @AttributeOverride(name = "kmerLength", column = @Column(name = "config_kmer_length", nullable = false)),
@@ -47,6 +44,7 @@ public class MotifAnalysis {
     @CollectionTable(name = "motif_analysis_rounds", joinColumns = @JoinColumn(name = "analysis_id"))
     @OrderColumn(name = "round_index")
     @Column(name = "round_name", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<String> roundNames = new ArrayList<>();
 
     @Convert(converter = CompressedMotifAnalysisProfileListConverter.class)
@@ -73,7 +71,7 @@ public class MotifAnalysis {
     }
 
     public MotifAnalysis(
-            String experimentId,
+            ExperimentRecord experiment,
             AptaTraceConfiguration requestConfig,
             List<String> roundNames,
             List<MotifAnalysisProfile> profiles,
@@ -81,7 +79,7 @@ public class MotifAnalysis {
             int lastRoundCount,
             long durationMs
     ) {
-        this.experimentId = experimentId;
+        this.experiment = experiment;
         this.requestConfig = requestConfig;
         this.roundNames = roundNames == null ? new ArrayList<>() : new ArrayList<>(roundNames);
         this.profiles = profiles == null ? new ArrayList<>() : new ArrayList<>(profiles);
@@ -91,20 +89,20 @@ public class MotifAnalysis {
         this.durationMs = durationMs;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public String getExperimentId() {
-        return experimentId;
+    public ExperimentRecord getExperiment() {
+        return experiment;
     }
 
-    public void setExperimentId(String experimentId) {
-        this.experimentId = experimentId;
+    public void setExperiment(ExperimentRecord experiment) {
+        this.experiment = experiment;
     }
 
     public AptaTraceConfiguration getRequestConfig() {
@@ -173,10 +171,7 @@ public class MotifAnalysis {
     }
 
     @PrePersist
-    public void assignIdIfMissing() {
-        if (id == null || id.isBlank()) {
-            id = UUID.randomUUID().toString();
-        }
+    public void calculateMotifCount() {
         motifCount = profiles == null ? 0 : profiles.size();
     }
 }

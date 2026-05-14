@@ -38,7 +38,7 @@ public class ProjectController {
 
     @GetMapping("/{projectId}")
     @PreAuthorize("hasPermission(#projectId, 'project', 'view')")
-    public ProjectDtos.ProjectDetailDTO getProject(@PathVariable String projectId) {
+    public ProjectDtos.ProjectDetailDTO getProject(@PathVariable Long projectId) {
         return projectService.getProject(currentUserService.requireUser(), projectId);
     }
 
@@ -50,7 +50,7 @@ public class ProjectController {
     @PatchMapping("/{projectId}")
     @PreAuthorize("hasPermission(#projectId, 'project', 'manage')")
     public ProjectDtos.ProjectDetailDTO updateProject(
-            @PathVariable String projectId,
+            @PathVariable Long projectId,
             @RequestBody AuthDtos.ProjectRequest request) {
         return projectService.updateProject(currentUserService.requireUser(), projectId, request);
     }
@@ -58,7 +58,7 @@ public class ProjectController {
     @PostMapping("/{projectId}/members")
     @PreAuthorize("hasPermission(#projectId, 'project', 'manage')")
     public ProjectDtos.ProjectDetailDTO upsertMembership(
-            @PathVariable String projectId,
+            @PathVariable Long projectId,
             @RequestBody AuthDtos.ProjectMembershipRequest request) {
         return projectService.upsertMembership(currentUserService.requireUser(), projectId, request);
     }
@@ -66,7 +66,7 @@ public class ProjectController {
     @DeleteMapping("/{projectId}/members/{userId}")
     @PreAuthorize("hasPermission(#projectId, 'project', 'manage')")
     public ResponseEntity<Void> removeMembership(
-            @PathVariable String projectId,
+            @PathVariable Long projectId,
             @PathVariable String userId) {
         projectService.removeMembership(projectId, userId);
         return ResponseEntity.noContent().build();

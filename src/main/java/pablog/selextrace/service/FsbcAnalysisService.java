@@ -3,13 +3,14 @@ package pablog.selextrace.service;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 import pablog.selextrace.config.FsbcConfiguration;
 import pablog.selextrace.domain.experiment.Experiment;
 import pablog.selextrace.domain.experiment.SelectionCycle;
 import pablog.selextrace.fsbc.FsbcEngine;
+import pablog.selextrace.dto.response.FsbcAnalysisDTO;
 import pablog.selextrace.model.FsbcAnalysis;
+import pablog.selextrace.repository.ExperimentRecordRepository;
 import pablog.selextrace.repository.FsbcAnalysisRepository;
 
 import java.util.Comparator;
@@ -21,36 +22,42 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class FsbcAnalysisService {
 
     private final FsbcAnalysisRepository fsbcAnalysisRepository;
+    private final ExperimentRecordRepository experimentRecordRepository;
     private final ExperimentPersistenceService experimentPersistenceService;
     private final FsbcEngine fsbcEngine;
 
     public FsbcAnalysisService(
             FsbcAnalysisRepository fsbcAnalysisRepository,
+            ExperimentRecordRepository experimentRecordRepository,
             ExperimentPersistenceService experimentPersistenceService,
             FsbcEngine fsbcEngine
     ) {
         this.fsbcAnalysisRepository = fsbcAnalysisRepository;
+        this.experimentRecordRepository = experimentRecordRepository;
         this.experimentPersistenceService = experimentPersistenceService;
         this.fsbcEngine = fsbcEngine;
     }
 
-    public List<FsbcAnalysis> listAnalyses(String experimentId) {
+    public List<FsbcAnalysisDTO> listAnalyses(Long experimentId) {
         validateExperimentId(experimentId);
         ensureExperimentExists(experimentId);
-        return fsbcAnalysisRepository.findByExperimentId(experimentId);
+        return fsbcAnalysisRepository.findByExperimentId(experimentId).stream()
+                .map(FsbcAnalysisDTO::from)
+                .toList();
     }
 
-    public FsbcAnalysis getAnalysis(String experimentId, String analysisId) {
+    public FsbcAnalysisDTO getAnalysis(Long experimentId, Long analysisId) {
         validateExperimentId(experimentId);
-        if (!StringUtils.hasText(analysisId)) {
+        if (analysisId == null) {
             throw new IllegalArgumentException("Analysis ID is required");
         }
 
         return fsbcAnalysisRepository.findByIdAndExperimentId(analysisId, experimentId)
+                .map(FsbcAnalysisDTO::from)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "FSBC analysis not found"));
     }
 
-    public FsbcAnalysis createAnalysis(String experimentId, FsbcConfiguration request) {
+    public FsbcAnalysisDTO createAnalysis(Long experimentId, FsbcConfiguration request) {
         validateExperimentId(experimentId);
 
         Experiment experiment = experimentPersistenceService.findExperimentById(experimentId)
@@ -72,7 +79,7 @@ public class FsbcAnalysisService {
         long durationMs = System.currentTimeMillis() - startMs;
 
         FsbcAnalysis analysis = new FsbcAnalysis(
-                experimentId,
+                experimentRecordRepository.getReferenceById(experimentId),
                 requestConfig,
                 result.aptamerToCluster(),
                 result.rankedStrings(),
@@ -82,13 +89,13 @@ public class FsbcAnalysisService {
                 durationMs
         );
 
-        return fsbcAnalysisRepository.save(analysis);
+        return FsbcAnalysisDTO.from(fsbcAnalysisRepository.save(analysis));
     }
 
     @Transactional
-    public void deleteAnalysis(String experimentId, String analysisId) {
+    public void deleteAnalysis(Long experimentId, Long analysisId) {
         validateExperimentId(experimentId);
-        if (!StringUtils.hasText(analysisId)) {
+        if (analysisId == null) {
             throw new IllegalArgumentException("Analysis ID is required");
         }
 
@@ -131,13 +138,13 @@ public class FsbcAnalysisService {
         }
     }
 
-    private void validateExperimentId(String experimentId) {
-        if (!StringUtils.hasText(experimentId)) {
+    private void validateExperimentId(Long experimentId) {
+        if (experimentId == null) {
             throw new IllegalArgumentException("Experiment id is required");
         }
     }
 
-    private void ensureExperimentExists(String experimentId) {
+    private void ensureExperimentExists(Long experimentId) {
         if (!experimentPersistenceService.existsExperiment(experimentId)) {
             throw new ResponseStatusException(NOT_FOUND, "Experiment not found");
         }

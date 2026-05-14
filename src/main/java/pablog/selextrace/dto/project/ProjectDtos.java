@@ -10,7 +10,7 @@ import java.util.List;
 public class ProjectDtos {
 
     public record ProjectReferenceDTO(
-            String id,
+            Long id,
             String name
     ) {
         public static ProjectReferenceDTO from(ProjectRecord project) {
@@ -20,7 +20,7 @@ public class ProjectDtos {
     }
 
     public record ProjectSummaryDTO(
-            String id,
+            Long id,
             String name,
             String description,
             Instant createdAt,
@@ -39,7 +39,7 @@ public class ProjectDtos {
     }
 
     public record ProjectDetailDTO(
-            String id,
+            Long id,
             String name,
             String description,
             Instant createdAt,

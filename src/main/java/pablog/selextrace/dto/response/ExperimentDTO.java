@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.List;
 
 public record ExperimentDTO(
-        String id,
+        Long id,
         String name,
         String description,
         Instant createdAt,

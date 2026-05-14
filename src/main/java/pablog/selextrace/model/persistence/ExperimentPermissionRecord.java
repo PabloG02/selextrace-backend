@@ -14,6 +14,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import pablog.selextrace.model.auth.ResourceAccessLevel;
 
 import java.time.Instant;
@@ -40,6 +42,7 @@ public class ExperimentPermissionRecord {
         nullable = false,
         foreignKey = @ForeignKey(name = "fk_experiment_permission_experiment")
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ExperimentRecord experiment;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

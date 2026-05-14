@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface SelectionCycleRecordRepository extends JpaRepository<SelectionCycleRecord, SelectionCycleRecordId> {
 
-    List<SelectionCycleRecord> findByIdExperimentId(String experimentId);
+    List<SelectionCycleRecord> findByIdExperimentId(Long experimentId);
 
-    void deleteByIdExperimentId(String experimentId);
+    void deleteByIdExperimentId(Long experimentId);
 }

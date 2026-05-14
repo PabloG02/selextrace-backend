@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ClusterAnalysisRepository extends JpaRepository<ClusterAnalysis, String> {
+public interface ClusterAnalysisRepository extends JpaRepository<ClusterAnalysis, Long> {
 
-    List<ClusterAnalysis> findByExperimentId(String experimentId);
+    List<ClusterAnalysis> findByExperimentId(Long experimentId);
 
-    Optional<ClusterAnalysis> findByIdAndExperimentId(String id, String experimentId);
+    Optional<ClusterAnalysis> findByIdAndExperimentId(Long id, Long experimentId);
 
-    long deleteByIdAndExperimentId(String id, String experimentId);
+    long deleteByIdAndExperimentId(Long id, Long experimentId);
 
-    long deleteByExperimentId(String experimentId);
+    long deleteByExperimentId(Long experimentId);
 }

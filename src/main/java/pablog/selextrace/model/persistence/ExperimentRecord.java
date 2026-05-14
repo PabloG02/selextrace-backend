@@ -14,8 +14,9 @@ import java.util.Set;
 public class ExperimentRecord {
 
     @Id
-    @Column(nullable = false, updatable = false, length = 36)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false, updatable = false)
+    private Long id;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -79,23 +80,29 @@ public class ExperimentRecord {
     @Column(nullable = false)
     private long totalPrimerOverlaps;
 
-    @OneToOne
-    @JoinColumn(name = "id", referencedColumnName = "experimentId", insertable = false, updatable = false)
+    @OneToOne(
+        mappedBy = "experiment",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
     private ExperimentMetadataRecord metadataRecord;
 
-    @OneToMany
-    @JoinColumn(name = "experimentId", referencedColumnName = "id", insertable = false, updatable = false)
+    @OneToMany(
+        mappedBy = "experiment",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
     private Set<SelectionCycleRecord> selectionCycleRecords = new LinkedHashSet<>();
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
     private Set<AptamerRecord> aptamerRecords = new LinkedHashSet<>();
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -228,6 +235,13 @@ public class ExperimentRecord {
     }
 
     public void setMetadataRecord(ExperimentMetadataRecord metadataRecord) {
+        if (metadataRecord == null) {
+            if (this.metadataRecord != null) {
+                this.metadataRecord.setExperiment(null);
+            }
+        } else {
+            metadataRecord.setExperiment(this);
+        }
         this.metadataRecord = metadataRecord;
     }
 
@@ -235,8 +249,9 @@ public class ExperimentRecord {
         return selectionCycleRecords;
     }
 
-    public void setSelectionCycleRecords(Set<SelectionCycleRecord> selectionCycleRecords) {
-        this.selectionCycleRecords = selectionCycleRecords;
+    public void addSelectionCycle(SelectionCycleRecord cycle) {
+        cycle.setExperiment(this);
+        selectionCycleRecords.add(cycle);
     }
 
     public Set<AptamerRecord> getAptamerRecords() {

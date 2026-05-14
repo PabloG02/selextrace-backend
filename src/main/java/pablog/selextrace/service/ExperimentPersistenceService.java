@@ -5,34 +5,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import pablog.selextrace.domain.experiment.Experiment;
 import pablog.selextrace.dto.ExperimentSummaryDTO;
-import pablog.selextrace.dto.auth.AccessDtos;
 import pablog.selextrace.dto.project.ProjectDtos;
 import pablog.selextrace.dto.response.ExperimentDTO;
 import pablog.selextrace.model.auth.ResourceAccessLevel;
 import pablog.selextrace.model.persistence.AppUserRecord;
-import pablog.selextrace.model.persistence.ExperimentPermissionRecord;
-import pablog.selextrace.model.persistence.ExperimentMetadataRecord;
 import pablog.selextrace.model.persistence.ExperimentRecord;
 import pablog.selextrace.model.persistence.ProjectRecord;
-import pablog.selextrace.model.persistence.SelectionCycleRecord;
-import pablog.selextrace.repository.AptamerRecordRepository;
-import pablog.selextrace.repository.ClusterAnalysisRepository;
-import pablog.selextrace.repository.AppUserRepository;
-import pablog.selextrace.repository.ExperimentPermissionRecordRepository;
-import pablog.selextrace.repository.ExperimentMetadataRecordRepository;
 import pablog.selextrace.repository.ExperimentRecordRepository;
-import pablog.selextrace.repository.FsbcAnalysisRepository;
-import pablog.selextrace.repository.MotifAnalysisRepository;
 import pablog.selextrace.repository.ProjectRepository;
-import pablog.selextrace.repository.SelectionCycleRecordRepository;
 import pablog.selextrace.service.mapper.ExperimentRecordMapper;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -41,13 +26,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class ExperimentPersistenceService {
 
     private final ExperimentRecordRepository experimentRecordRepository;
-    private final ExperimentMetadataRecordRepository experimentMetadataRecordRepository;
-    private final SelectionCycleRecordRepository selectionCycleRecordRepository;
-    private final AptamerRecordRepository aptamerRecordRepository;
-    private final ClusterAnalysisRepository clusterAnalysisRepository;
-    private final FsbcAnalysisRepository fsbcAnalysisRepository;
-    private final MotifAnalysisRepository motifAnalysisRepository;
-    private final ExperimentPermissionRecordRepository experimentPermissionRecordRepository;
     private final ProjectRepository projectRepository;
     private final ExperimentRecordMapper experimentRecordMapper;
     private final AuthorizationService authorizationService;
@@ -55,26 +33,12 @@ public class ExperimentPersistenceService {
 
     public ExperimentPersistenceService(
             ExperimentRecordRepository experimentRecordRepository,
-            ExperimentMetadataRecordRepository experimentMetadataRecordRepository,
-            SelectionCycleRecordRepository selectionCycleRecordRepository,
-            AptamerRecordRepository aptamerRecordRepository,
-            ClusterAnalysisRepository clusterAnalysisRepository,
-            FsbcAnalysisRepository fsbcAnalysisRepository,
-            MotifAnalysisRepository motifAnalysisRepository,
-            ExperimentPermissionRecordRepository experimentPermissionRecordRepository,
             ProjectRepository projectRepository,
             ExperimentRecordMapper experimentRecordMapper,
             AuthorizationService authorizationService,
             ExperimentPermissionsService experimentPermissionsService
     ) {
         this.experimentRecordRepository = experimentRecordRepository;
-        this.experimentMetadataRecordRepository = experimentMetadataRecordRepository;
-        this.selectionCycleRecordRepository = selectionCycleRecordRepository;
-        this.aptamerRecordRepository = aptamerRecordRepository;
-        this.clusterAnalysisRepository = clusterAnalysisRepository;
-        this.fsbcAnalysisRepository = fsbcAnalysisRepository;
-        this.motifAnalysisRepository = motifAnalysisRepository;
-        this.experimentPermissionRecordRepository = experimentPermissionRecordRepository;
         this.projectRepository = projectRepository;
         this.experimentRecordMapper = experimentRecordMapper;
         this.authorizationService = authorizationService;
@@ -82,52 +46,26 @@ public class ExperimentPersistenceService {
     }
 
     @Transactional
-    public ExperimentDTO persistExperiment(ExperimentRecord experimentRecord, AppUserRecord createdByUser, String requestedProjectId) {
+    public ExperimentDTO persistExperiment(ExperimentRecord experimentRecord, AppUserRecord createdByUser, Long requestedProjectId) {
         Objects.requireNonNull(experimentRecord, "experimentRecord is required");
         Objects.requireNonNull(createdByUser, "createdByUser is required");
 
-        ProjectRecord project = resolveProject(experimentRecord, createdByUser, requestedProjectId);
-        experimentRecord.setProject(project);
-
-        String experimentId = experimentRecord.getId() == null || experimentRecord.getId().isBlank()
-                ? UUID.randomUUID().toString()
-                : experimentRecord.getId();
-
-        experimentRecord.setId(experimentId);
         experimentRecord.setCreatedByUser(createdByUser);
+        experimentRecord.setProject(resolveProject(experimentRecord, createdByUser, requestedProjectId));
 
-        ExperimentMetadataRecord metadataRecord = experimentRecord.getMetadataRecord();
-        metadataRecord.setExperimentId(experimentId);
+        ExperimentRecord saved = experimentRecordRepository.save(experimentRecord);
 
-        Set<SelectionCycleRecord> selectionCycles = experimentRecord.getSelectionCycleRecords();
-        for (SelectionCycleRecord cycle : selectionCycles) {
-            cycle.setExperimentId(experimentId);
+        if (experimentRecord.getProject() == null) {
+            experimentPermissionsService.grantAccess(saved.getId(), createdByUser.getId(), ResourceAccessLevel.MANAGER, createdByUser.getId());
         }
 
-        // TODO: hack -> FIX IT
-        experimentRecord.setMetadataRecord(null);
-        experimentRecord.setSelectionCycleRecords(new LinkedHashSet<>());
-
-        selectionCycleRecordRepository.deleteByIdExperimentId(experimentId);
-
-        experimentRecordRepository.save(experimentRecord);
-        experimentMetadataRecordRepository.save(metadataRecord);
-
-        if (!selectionCycles.isEmpty()) {
-            selectionCycleRecordRepository.saveAll(selectionCycles);
-        }
-
-        if (project == null) {
-            experimentPermissionsService.grantAccess(experimentId, createdByUser.getId(), ResourceAccessLevel.MANAGER, createdByUser.getId());
-        }
-
-        return findExperimentResponseById(experimentId, createdByUser)
+        return findExperimentResponseById(saved.getId(), createdByUser)
                 .orElseThrow(() -> new IllegalStateException("Persisted experiment could not be reloaded"));
     }
 
     @Transactional
-    public ExperimentDTO transferExperimentToProject(AppUserRecord currentUser, String experimentId, String targetProjectId) {
-        String projectId = requireProjectId(targetProjectId);
+    public ExperimentDTO transferExperimentToProject(AppUserRecord currentUser, Long experimentId, Long targetProjectId) {
+        Long projectId = requireProjectId(targetProjectId);
         ProjectRecord project = loadProject(projectId);
 
         ExperimentRecord experiment = experimentRecordRepository.findById(experimentId)
@@ -155,7 +93,7 @@ public class ExperimentPersistenceService {
                 .toList();
     }
 
-    public Optional<ExperimentDTO> findExperimentResponseById(String experimentId, AppUserRecord currentUser) {
+    public Optional<ExperimentDTO> findExperimentResponseById(Long experimentId, AppUserRecord currentUser) {
         return experimentRecordRepository.findById(experimentId)
                 .filter(record -> authorizationService.canViewExperiment(currentUser, record.getId()))
                 .map(record -> experimentRecordMapper.toExperimentDTO(
@@ -165,39 +103,36 @@ public class ExperimentPersistenceService {
                 ));
     }
 
-    public Optional<Experiment> findExperimentById(String experimentId) {
+    public Optional<Experiment> findExperimentById(Long experimentId) {
         return experimentRecordRepository.findById(experimentId)
                 .map(experimentRecordMapper::toExperiment);
     }
 
-    public boolean existsExperiment(String experimentId) {
+    public boolean existsExperiment(Long experimentId) {
         return experimentRecordRepository.existsById(experimentId);
     }
 
+    /// Deletes an experiment and all related data.
+    ///
+    /// Uses a native SQL DELETE so that the database's `ON DELETE CASCADE`
+    /// constraints (declared via `@OnDelete`) handle all child tables
+    /// in a single pass, avoiding Hibernate's row-by-row cascade removal.
     @Transactional
-    public boolean deleteExperiment(String experimentId) {
-        if (experimentId == null || experimentId.isBlank()) {
+    public boolean deleteExperiment(Long experimentId) {
+        if (experimentId == null) {
             return false;
         }
         if (!experimentRecordRepository.existsById(experimentId)) {
             return false;
         }
 
-        // Remove dependent entities first to avoid foreign key violations.
-        clusterAnalysisRepository.deleteByExperimentId(experimentId);
-        fsbcAnalysisRepository.deleteByExperimentId(experimentId);
-        motifAnalysisRepository.deleteByExperimentId(experimentId);
+        experimentRecordRepository.bulkDeleteById(experimentId);
 
-        selectionCycleRecordRepository.deleteByIdExperimentId(experimentId);
-        aptamerRecordRepository.deleteByIdExperimentId(experimentId);
-        experimentPermissionRecordRepository.deleteAllByExperiment_Id(experimentId);
-        experimentMetadataRecordRepository.deleteById(experimentId);
-        experimentRecordRepository.deleteById(experimentId);
         return true;
     }
 
-    private ProjectDtos.ProjectReferenceDTO toProjectReference(String projectId) {
-        if (projectId == null || projectId.isBlank()) {
+    private ProjectDtos.ProjectReferenceDTO toProjectReference(Long projectId) {
+        if (projectId == null) {
             return null;
         }
         return projectRepository.findById(projectId)
@@ -205,8 +140,8 @@ public class ExperimentPersistenceService {
                 .orElse(null);
     }
 
-    private ProjectRecord resolveProject(ExperimentRecord experimentRecord, AppUserRecord createdByUser, String requestedProjectId) {
-        String projectId = firstNonBlank(
+    private ProjectRecord resolveProject(ExperimentRecord experimentRecord, AppUserRecord createdByUser, Long requestedProjectId) {
+        Long projectId = firstNonNull(
                 requestedProjectId,
                 projectIdOf(experimentRecord.getProject())
         );
@@ -216,31 +151,24 @@ public class ExperimentPersistenceService {
         return loadProject(projectId);
     }
 
-    private ProjectRecord loadProject(String projectId) {
-        String normalizedProjectId = requireProjectId(projectId);
-        return projectRepository.findById(normalizedProjectId)
+    private ProjectRecord loadProject(Long projectId) {
+        return projectRepository.findById(requireProjectId(projectId))
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Project not found"));
     }
 
-    private String projectIdOf(ProjectRecord project) {
+    private Long projectIdOf(ProjectRecord project) {
         return project == null ? null : project.getId();
     }
 
-    private String firstNonBlank(String primary, String fallback) {
-        if (primary != null && !primary.isBlank()) {
-            return primary.trim();
-        }
-        if (fallback != null && !fallback.isBlank()) {
-            return fallback.trim();
-        }
-        return null;
+    private Long firstNonNull(Long primary, Long fallback) {
+        return primary != null ? primary : fallback;
     }
 
-    private String requireProjectId(String projectId) {
-        if (projectId == null || projectId.isBlank()) {
+    private Long requireProjectId(Long projectId) {
+        if (projectId == null) {
             throw new ResponseStatusException(BAD_REQUEST, "A target project is required");
         }
-        return projectId.trim();
+        return projectId;
     }
 
 }

@@ -2,15 +2,16 @@ package pablog.selextrace.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 import pablog.selextrace.cluster.HashAptaCluster;
 import pablog.selextrace.config.AptaClusterConfiguration;
 import pablog.selextrace.domain.cluster.ClusterContainer;
 import pablog.selextrace.domain.cluster.InMemoryClusterContainer;
 import pablog.selextrace.domain.experiment.Experiment;
+import pablog.selextrace.dto.response.ClusterAnalysisDTO;
 import pablog.selextrace.model.ClusterAnalysis;
 import pablog.selextrace.repository.ClusterAnalysisRepository;
+import pablog.selextrace.repository.ExperimentRecordRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -23,33 +24,39 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class AptaClusterService {
 
     private final ClusterAnalysisRepository analysisRepository;
+    private final ExperimentRecordRepository experimentRecordRepository;
     private final ExperimentPersistenceService experimentPersistenceService;
 
     public AptaClusterService(
             ClusterAnalysisRepository analysisRepository,
+            ExperimentRecordRepository experimentRecordRepository,
             ExperimentPersistenceService experimentPersistenceService
     ) {
         this.analysisRepository = analysisRepository;
+        this.experimentRecordRepository = experimentRecordRepository;
         this.experimentPersistenceService = experimentPersistenceService;
     }
 
-    public List<ClusterAnalysis> listAnalyses(String experimentId) {
+    public List<ClusterAnalysisDTO> listAnalyses(Long experimentId) {
         validateExperimentId(experimentId);
         ensureExperimentExists(experimentId);
-        return analysisRepository.findByExperimentId(experimentId);
+        return analysisRepository.findByExperimentId(experimentId).stream()
+                .map(ClusterAnalysisDTO::from)
+                .toList();
     }
 
-    public ClusterAnalysis getAnalysis(String experimentId, String analysisId) {
+    public ClusterAnalysisDTO getAnalysis(Long experimentId, Long analysisId) {
         validateExperimentId(experimentId);
-        if (!StringUtils.hasText(analysisId)) {
+        if (analysisId == null) {
             throw new IllegalArgumentException("Analysis ID is required");
         }
 
         return analysisRepository.findByIdAndExperimentId(analysisId, experimentId)
+                .map(ClusterAnalysisDTO::from)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Clustering analysis not found"));
     }
 
-    public ClusterAnalysis createAnalysis(String experimentId, AptaClusterConfiguration request) {
+    public ClusterAnalysisDTO createAnalysis(Long experimentId, AptaClusterConfiguration request) {
         validateExperimentId(experimentId);
 
         Experiment experiment = experimentPersistenceService.findExperimentById(experimentId)
@@ -68,19 +75,19 @@ public class AptaClusterService {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         ClusterAnalysis analysis = new ClusterAnalysis(
-                experimentId,
+                experimentRecordRepository.getReferenceById(experimentId),
                 request,
                 aptamerToCluster,
                 durationMs
         );
 
-        return analysisRepository.save(analysis);
+        return ClusterAnalysisDTO.from(analysisRepository.save(analysis));
     }
 
     @Transactional
-    public void deleteAnalysis(String experimentId, String analysisId) {
+    public void deleteAnalysis(Long experimentId, Long analysisId) {
         validateExperimentId(experimentId);
-        if (!StringUtils.hasText(analysisId)) {
+        if (analysisId == null) {
             throw new IllegalArgumentException("Analysis ID is required");
         }
 
@@ -91,13 +98,13 @@ public class AptaClusterService {
         }
     }
 
-    private void validateExperimentId(String experimentId) {
-        if (!StringUtils.hasText(experimentId)) {
+    private void validateExperimentId(Long experimentId) {
+        if (experimentId == null) {
             throw new IllegalArgumentException("Experiment id is required");
         }
     }
 
-    private void ensureExperimentExists(String experimentId) {
+    private void ensureExperimentExists(Long experimentId) {
         if (!experimentPersistenceService.existsExperiment(experimentId)) {
             throw new ResponseStatusException(NOT_FOUND, "Experiment not found");
         }

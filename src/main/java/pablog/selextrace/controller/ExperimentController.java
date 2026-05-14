@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -53,7 +52,7 @@ public class ExperimentController {
     }
 
     @GetMapping("/{id}")
-    public ExperimentDTO getExperiment(@PathVariable String id) {
+    public ExperimentDTO getExperiment(@PathVariable Long id) {
         return experimentPersistenceService.findExperimentResponseById(id, currentUserService.requireUser())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Experiment not found in PostgreSQL"));
     }
@@ -67,8 +66,8 @@ public class ExperimentController {
     ) throws Exception {
         var currentUser = currentUserService.requireUser();
 
-        String targetProjectId = dto.projectId();
-        if (StringUtils.hasText(targetProjectId)) {
+        Long targetProjectId = dto.projectId();
+        if (targetProjectId != null) {
             authorizationService.assertCanManageProject(currentUser, targetProjectId);
         }
 
@@ -98,10 +97,10 @@ public class ExperimentController {
 
     @PatchMapping("/{id}/project")
     public ExperimentDTO transferExperimentToProject(
-            @PathVariable String id,
+            @PathVariable Long id,
             @RequestBody AuthDtos.ExperimentProjectTransferRequest request
     ) {
-        String targetProjectId = request == null ? null : request.projectId();
+        Long targetProjectId = request == null ? null : request.projectId();
         return experimentPersistenceService.transferExperimentToProject(
                 currentUserService.requireUser(),
                 id,
@@ -110,7 +109,7 @@ public class ExperimentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteExperiment(@PathVariable String id) {
+    public ResponseEntity<Void> deleteExperiment(@PathVariable Long id) {
         authorizationService.assertCanManageExperiment(currentUserService.requireUser(), id);
         boolean deleted = experimentPersistenceService.deleteExperiment(id);
         if (!deleted) {

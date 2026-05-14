@@ -9,8 +9,8 @@ import java.util.Objects;
 @Embeddable
 public class AptamerRecordId implements Serializable {
 
-    @Column(nullable = false, length = 36)
-    private String experimentId;
+    @Column(nullable = false)
+    private Long experimentId;
 
     @Column(nullable = false)
     private int aptamerId;
@@ -18,16 +18,16 @@ public class AptamerRecordId implements Serializable {
     public AptamerRecordId() {
     }
 
-    public AptamerRecordId(String experimentId, int aptamerId) {
+    public AptamerRecordId(Long experimentId, int aptamerId) {
         this.experimentId = experimentId;
         this.aptamerId = aptamerId;
     }
 
-    public String getExperimentId() {
+    public Long getExperimentId() {
         return experimentId;
     }
 
-    public void setExperimentId(String experimentId) {
+    public void setExperimentId(Long experimentId) {
         this.experimentId = experimentId;
     }
 

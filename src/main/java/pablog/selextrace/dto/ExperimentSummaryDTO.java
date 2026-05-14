@@ -10,7 +10,7 @@ import java.time.Instant;
  * Contains only essential fields: id, name, description, and creation date.
  */
 public record ExperimentSummaryDTO(
-        String id,
+        Long id,
         String name,
         String description,
         Instant createdAt,

@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface AptamerRecordRepository extends JpaRepository<AptamerRecord, AptamerRecordId> {
 
-    List<AptamerRecord> findByIdExperimentId(String experimentId);
+    List<AptamerRecord> findByIdExperimentId(Long experimentId);
 
-    void deleteByIdExperimentId(String experimentId);
+    void deleteByIdExperimentId(Long experimentId);
 }
