@@ -1,7 +1,7 @@
 package pablog.selextrace.service;
 
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import pablog.selextrace.domain.experiment.Experiment;
 import pablog.selextrace.dto.ExperimentSummaryDTO;
@@ -9,8 +9,10 @@ import pablog.selextrace.dto.project.ProjectDtos;
 import pablog.selextrace.dto.response.ExperimentDTO;
 import pablog.selextrace.model.auth.ResourceAccessLevel;
 import pablog.selextrace.model.persistence.AppUserRecord;
+import pablog.selextrace.model.persistence.AptamerRecord;
 import pablog.selextrace.model.persistence.ExperimentRecord;
 import pablog.selextrace.model.persistence.ProjectRecord;
+import pablog.selextrace.repository.AptamerRecordRepository;
 import pablog.selextrace.repository.ExperimentRecordRepository;
 import pablog.selextrace.repository.ProjectRepository;
 import pablog.selextrace.service.mapper.ExperimentRecordMapper;
@@ -18,6 +20,7 @@ import pablog.selextrace.service.mapper.ExperimentRecordMapper;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -26,6 +29,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class ExperimentPersistenceService {
 
     private final ExperimentRecordRepository experimentRecordRepository;
+    private final AptamerRecordRepository aptamerRecordRepository;
     private final ProjectRepository projectRepository;
     private final ExperimentRecordMapper experimentRecordMapper;
     private final AuthorizationService authorizationService;
@@ -33,12 +37,14 @@ public class ExperimentPersistenceService {
 
     public ExperimentPersistenceService(
             ExperimentRecordRepository experimentRecordRepository,
+            AptamerRecordRepository aptamerRecordRepository,
             ProjectRepository projectRepository,
             ExperimentRecordMapper experimentRecordMapper,
             AuthorizationService authorizationService,
             ExperimentPermissionsService experimentPermissionsService
     ) {
         this.experimentRecordRepository = experimentRecordRepository;
+        this.aptamerRecordRepository = aptamerRecordRepository;
         this.projectRepository = projectRepository;
         this.experimentRecordMapper = experimentRecordMapper;
         this.authorizationService = authorizationService;
@@ -93,19 +99,28 @@ public class ExperimentPersistenceService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public Optional<ExperimentDTO> findExperimentResponseById(Long experimentId, AppUserRecord currentUser) {
-        return experimentRecordRepository.findById(experimentId)
+        return experimentRecordRepository.findDetailedById(experimentId)
                 .filter(record -> authorizationService.canViewExperiment(currentUser, record.getId()))
-                .map(record -> experimentRecordMapper.toExperimentDTO(
-                        record,
-                        toProjectReference(projectIdOf(record.getProject())),
-                        authorizationService.getExperimentAccessLevel(currentUser, record).orElse(ResourceAccessLevel.VIEWER)
-                ));
+                .map(record -> {
+                    Stream<AptamerRecord> aptamerStream = aptamerRecordRepository.streamByExperimentId(experimentId);
+                    return experimentRecordMapper.toExperimentDTO(
+                            record,
+                            aptamerStream,
+                            toProjectReference(projectIdOf(record.getProject())),
+                            authorizationService.getExperimentAccessLevel(currentUser, record).orElse(ResourceAccessLevel.VIEWER)
+                    );
+                });
     }
 
+    @Transactional(readOnly = true)
     public Optional<Experiment> findExperimentById(Long experimentId) {
-        return experimentRecordRepository.findById(experimentId)
-                .map(experimentRecordMapper::toExperiment);
+        return experimentRecordRepository.findDetailedById(experimentId)
+                .map(record -> {
+                    Stream<AptamerRecord> aptamerStream = aptamerRecordRepository.streamByExperimentId(experimentId);
+                    return experimentRecordMapper.toExperiment(record, aptamerStream);
+                });
     }
 
     public boolean existsExperiment(Long experimentId) {

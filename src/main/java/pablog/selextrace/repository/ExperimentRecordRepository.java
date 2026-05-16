@@ -15,9 +15,9 @@ public interface ExperimentRecordRepository extends JpaRepository<ExperimentReco
 	@EntityGraph(attributePaths = {
 			"metadataRecord",
 			"selectionCycleRecords",
-			"aptamerRecords"
+			// "aptamerRecords" excluded: retrieving millions of rows causes OOMs
 	})
-	Optional<ExperimentRecord> findById(Long id);
+	Optional<ExperimentRecord> findDetailedById(Long id);
 
 	@Modifying
 	@Query(value = "DELETE FROM experiment_records WHERE id = :id", nativeQuery = true)

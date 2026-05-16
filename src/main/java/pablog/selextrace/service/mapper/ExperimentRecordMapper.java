@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 @Component
 public class ExperimentRecordMapper {
@@ -51,6 +52,7 @@ public class ExperimentRecordMapper {
 
     public ExperimentDTO toExperimentDTO(
             ExperimentRecord record,
+            Stream<AptamerRecord> aptamerRecordsStream,
             ProjectDtos.ProjectReferenceDTO project,
             ResourceAccessLevel accessLevel
     ) {
@@ -79,11 +81,11 @@ public class ExperimentRecordMapper {
 
         Map<Integer, String> idToAptamer = new HashMap<>();
         Map<Integer, AptamerBounds> idToBounds = new HashMap<>();
-        if (record.getAptamerRecords() != null) {
-            for (AptamerRecord aptamer : record.getAptamerRecords()) {
+        try (aptamerRecordsStream) {
+            aptamerRecordsStream.forEach(aptamer -> {
                 idToAptamer.put(aptamer.getAptamerNumericId(), aptamer.getSequence());
                 idToBounds.put(aptamer.getAptamerNumericId(), new AptamerBounds(aptamer.getStartIndex(), aptamer.getEndIndex()));
-            }
+            });
         }
 
         ExperimentPoolDTO pool = new ExperimentPoolDTO(idToAptamer, idToBounds);
@@ -125,13 +127,21 @@ public class ExperimentRecordMapper {
         );
     }
 
-    public Experiment toExperiment(ExperimentRecord record) {
+    public Experiment toExperiment(ExperimentRecord record, Stream<AptamerRecord> aptamerRecordsStream) {
         Objects.requireNonNull(record, "record is required");
 
         AptamerPool pool = new InMemoryAptamerPool();
         List<SelectionCycle> cycles = createSelectionCycles(record, pool);
-        preloadAptamers(record, pool);
-        hydrateCycleMemberships(record, cycles);
+
+        Map<Integer, AptamerRecord> aptamersById = new HashMap<>();
+        // Preload aptamers
+        try (aptamerRecordsStream) {
+            aptamerRecordsStream.forEach(aptamer -> {
+                pool.registerAptamer(aptamer.getSequence(), aptamer.getStartIndex(), aptamer.getEndIndex());
+                aptamersById.put(aptamer.getAptamerNumericId(), aptamer);
+            });
+        }
+        hydrateCycleMemberships(record, cycles, aptamersById);
 
         Metadata metadata = record.getMetadataRecord() != null && record.getMetadataRecord().getMetadata() != null
                 ? record.getMetadataRecord().getMetadata()
@@ -178,27 +188,9 @@ public class ExperimentRecordMapper {
         return cycles;
     }
 
-    private void preloadAptamers(ExperimentRecord record, AptamerPool pool) {
-        if (record.getAptamerRecords() == null) {
-            return;
-        }
-
-        record.getAptamerRecords()
-                .stream()
-                .sorted(Comparator.comparingInt(AptamerRecord::getAptamerNumericId))
-                .forEach(aptamer -> pool.registerAptamer(aptamer.getSequence(), aptamer.getStartIndex(), aptamer.getEndIndex()));
-    }
-
-    private void hydrateCycleMemberships(ExperimentRecord record, List<SelectionCycle> cycles) {
+    private void hydrateCycleMemberships(ExperimentRecord record, List<SelectionCycle> cycles, Map<Integer, AptamerRecord> aptamersById) {
         if (record.getSelectionCycleRecords() == null || record.getSelectionCycleRecords().isEmpty()) {
             return;
-        }
-
-        Map<Integer, AptamerRecord> aptamersById = new HashMap<>();
-        if (record.getAptamerRecords() != null) {
-            for (AptamerRecord aptamer : record.getAptamerRecords()) {
-                aptamersById.put(aptamer.getAptamerNumericId(), aptamer);
-            }
         }
 
         Map<String, SelectionCycle> cyclesByName = new HashMap<>();

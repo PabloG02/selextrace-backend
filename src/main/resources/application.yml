@@ -21,6 +21,11 @@ spring:
     hibernate:
       ddl-auto: update
     open-in-view: false
+    properties:
+      hibernate:
+        order_inserts: true
+        jdbc:
+          batch_size: 100000
 
   servlet:
     multipart:

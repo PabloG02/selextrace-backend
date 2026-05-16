@@ -120,7 +120,7 @@ public class AuthorizationService {
     }
 
     public void assertCanManageExperiment(AppUserRecord user, Long experimentId) {
-        if (experimentRecordRepository.findById(experimentId).isEmpty()) {
+        if (!experimentRecordRepository.existsById(experimentId)) {
             throw new ResponseStatusException(NOT_FOUND, "Experiment not found");
         }
         if (!canManageExperiment(user, experimentId)) {

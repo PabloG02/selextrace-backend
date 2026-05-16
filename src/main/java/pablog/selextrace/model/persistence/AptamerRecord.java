@@ -1,9 +1,8 @@
 package pablog.selextrace.model.persistence;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "aptamer_records")
@@ -11,6 +10,12 @@ public class AptamerRecord {
 
     @EmbeddedId
     private AptamerRecordId id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @MapsId("experimentId")
+    @JoinColumn(name = "experiment_id", nullable = false, updatable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private ExperimentRecord experiment;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String sequence;
@@ -38,6 +43,17 @@ public class AptamerRecord {
             id = new AptamerRecordId();
         }
         id.setExperimentId(experimentId);
+    }
+
+    public ExperimentRecord getExperiment() {
+        return experiment;
+    }
+
+    protected void setExperiment(ExperimentRecord experiment) {
+        this.experiment = experiment;
+        if (experiment != null) {
+            setExperimentId(experiment.getId());
+        }
     }
 
     public int getAptamerNumericId() {

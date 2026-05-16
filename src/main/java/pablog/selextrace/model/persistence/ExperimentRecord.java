@@ -2,8 +2,6 @@ package pablog.selextrace.model.persistence;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
@@ -94,8 +92,11 @@ public class ExperimentRecord {
     )
     private Set<SelectionCycleRecord> selectionCycleRecords = new LinkedHashSet<>();
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(nullable = false)
+    @OneToMany(
+        mappedBy = "experiment",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
     private Set<AptamerRecord> aptamerRecords = new LinkedHashSet<>();
 
     public Long getId() {
@@ -254,11 +255,17 @@ public class ExperimentRecord {
         selectionCycleRecords.add(cycle);
     }
 
-    public Set<AptamerRecord> getAptamerRecords() {
-        return aptamerRecords;
+    public void setAptamerRecords(Set<AptamerRecord> aptamerRecords) {
+        this.aptamerRecords.clear();
+        if (aptamerRecords != null) {
+            for (AptamerRecord aptamerRecord : aptamerRecords) {
+                addAptamerRecord(aptamerRecord);
+            }
+        }
     }
 
-    public void setAptamerRecords(Set<AptamerRecord> aptamerRecords) {
-        this.aptamerRecords = aptamerRecords;
+    public void addAptamerRecord(AptamerRecord aptamerRecord) {
+        aptamerRecord.setExperiment(this);
+        aptamerRecords.add(aptamerRecord);
     }
 }
