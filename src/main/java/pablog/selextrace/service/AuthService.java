@@ -36,19 +36,22 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final CurrentUserService currentUserService;
+    private final IdentityProviderService identityProviderService;
 
     public AuthService(
             AppUserRepository userRepository,
             PasswordIdentityRepository passwordIdentityRepository,
             AuthenticationManager authenticationManager,
             PasswordEncoder passwordEncoder,
-            CurrentUserService currentUserService
+            CurrentUserService currentUserService,
+            IdentityProviderService identityProviderService
     ) {
         this.userRepository = userRepository;
         this.passwordIdentityRepository = passwordIdentityRepository;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
         this.currentUserService = currentUserService;
+        this.identityProviderService = identityProviderService;
     }
 
     @Transactional
@@ -120,8 +123,8 @@ public class AuthService {
         }
 
         identity.setPasswordHash(passwordEncoder.encode(normalizePassword(request.newPassword())));
-        user.setMustChangePassword(false);
-        userRepository.save(user);
+        identity.setMustChangePassword(false);
+        passwordIdentityRepository.save(identity);
 
         return toAuthUserResponse(user);
     }
@@ -132,7 +135,13 @@ public class AuthService {
                 user.getEmail(),
                 user.getUsername(),
                 user.getSystemRole(),
-                user.isMustChangePassword(),
+                user.getIdentities().stream()
+                        .filter(PasswordIdentityRecord.class::isInstance)
+                        .map(PasswordIdentityRecord.class::cast)
+                        .findFirst()
+                        .map(PasswordIdentityRecord::getMustChangePassword)
+                        .orElse(false),
+                identityProviderService.linkedProviders(user),
                 user.getCreatedAt()
         );
     }

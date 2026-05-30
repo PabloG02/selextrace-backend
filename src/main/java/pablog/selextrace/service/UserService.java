@@ -5,10 +5,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import pablog.selextrace.dto.auth.AuthDtos;
-import pablog.selextrace.model.auth.IdentityProvider;
 import pablog.selextrace.model.persistence.*;
 import pablog.selextrace.repository.AppUserRepository;
-import pablog.selextrace.repository.UserIdentityRepository;
+import pablog.selextrace.repository.PasswordIdentityRepository;
 
 import java.util.List;
 
@@ -20,17 +19,20 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class UserService {
 
     private final AppUserRepository userRepository;
-    private final UserIdentityRepository userIdentityRepository;
+    private final PasswordIdentityRepository passwordIdentityRepository;
     private final PasswordEncoder passwordEncoder;
+    private final IdentityProviderService identityProviderService;
 
     public UserService(
             AppUserRepository userRepository,
-            UserIdentityRepository userIdentityRepository,
-            PasswordEncoder passwordEncoder
+            PasswordIdentityRepository passwordIdentityRepository,
+            PasswordEncoder passwordEncoder,
+            IdentityProviderService identityProviderService
     ) {
         this.userRepository = userRepository;
-        this.userIdentityRepository = userIdentityRepository;
+        this.passwordIdentityRepository = passwordIdentityRepository;
         this.passwordEncoder = passwordEncoder;
+        this.identityProviderService = identityProviderService;
     }
 
     public List<AuthDtos.UserSummaryResponse> listUsers() {
@@ -70,16 +72,13 @@ public class UserService {
         AppUserRecord user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
 
-        PasswordIdentityRecord identity = userIdentityRepository
-                .findByUser_EmailAndProvider(user.getEmail(), IdentityProvider.PASSWORD)
-                .filter(i -> i instanceof PasswordIdentityRecord)
-                .map(i -> (PasswordIdentityRecord) i)
+        PasswordIdentityRecord identity = passwordIdentityRepository
+                .findByUser_Email(user.getEmail())
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Local identity not found"));
 
         identity.setPasswordHash(passwordEncoder.encode(request.newPassword()));
-        userIdentityRepository.save(identity);
-        user.setMustChangePassword(true);
-        userRepository.save(user);
+        identity.setMustChangePassword(true);
+        passwordIdentityRepository.save(identity);
         return toSummary(user);
     }
 
@@ -90,7 +89,13 @@ public class UserService {
                 user.getUsername(),
                 user.getSystemRole(),
                 user.isActive(),
-                user.isMustChangePassword(),
+                user.getIdentities().stream()
+                        .filter(PasswordIdentityRecord.class::isInstance)
+                        .map(PasswordIdentityRecord.class::cast)
+                        .findFirst()
+                        .map(PasswordIdentityRecord::getMustChangePassword)
+                        .orElse(false),
+                identityProviderService.linkedProviders(user),
                 user.getCreatedAt()
         );
     }

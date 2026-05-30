@@ -1,6 +1,10 @@
 package pablog.selextrace.config;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,20 +21,22 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.OncePerRequestFilter;
 import pablog.selextrace.security.AppPermissionEvaluator;
 import pablog.selextrace.security.AppUserDetailsService;
-import pablog.selextrace.security.MustChangePasswordFilter;
+import pablog.selextrace.security.OAuth2LoginFailureHandler;
+import pablog.selextrace.security.OAuth2LoginSuccessHandler;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.util.List;
 
 @Configuration
@@ -63,7 +69,9 @@ public class SecurityConfig {
             HttpSecurity http,
             DaoAuthenticationProvider authenticationProvider,
             CorsConfigurationSource corsConfigurationSource,
-            MustChangePasswordFilter mustChangePasswordFilter
+            ObjectProvider<ClientRegistrationRepository> clientRegistrationRepository,
+            OAuth2LoginSuccessHandler oauth2LoginSuccessHandler,
+            OAuth2LoginFailureHandler oauth2LoginFailureHandler
     ) throws Exception {
         CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
         csrfTokenRepository.setCookiePath("/");
@@ -79,14 +87,21 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/signup", "/api/auth/signin", "/api/auth/csrf").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .addFilterAfter(csrfCookieFilter(), CsrfFilter.class)
-                .addFilterAfter(mustChangePasswordFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable);
+
+        if (clientRegistrationRepository.getIfAvailable() != null) {
+            http.oauth2Login(oauth2 -> oauth2
+                    .successHandler(oauth2LoginSuccessHandler)
+                    .failureHandler(oauth2LoginFailureHandler)
+            );
+        }
 
         return http.build();
     }
@@ -97,7 +112,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(securityProperties.allowedOrigins());
         configuration.setAllowCredentials(true);
         configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN", "X-Requested-With"));
+        configuration.setAllowedHeaders(List.of("Content-Type", "X-CSRF-TOKEN", "X-XSRF-TOKEN", "X-Requested-With"));
         configuration.setExposedHeaders(List.of("X-XSRF-TOKEN"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -105,14 +120,21 @@ public class SecurityConfig {
         return source;
     }
 
+    @Bean
+    public MethodSecurityExpressionHandler methodSecurityExpressionHandler(AppPermissionEvaluator permissionEvaluator) {
+        var handler = new DefaultMethodSecurityExpressionHandler();
+        handler.setPermissionEvaluator(permissionEvaluator);
+        return handler;
+    }
+
     private OncePerRequestFilter csrfCookieFilter() {
         return new OncePerRequestFilter() {
             @Override
             protected void doFilterInternal(
-                    jakarta.servlet.http.HttpServletRequest request,
-                    jakarta.servlet.http.HttpServletResponse response,
-                    FilterChain filterChain
-            ) throws java.io.IOException, jakarta.servlet.ServletException {
+                    @NonNull HttpServletRequest request,
+                    @NonNull HttpServletResponse response,
+                    @NonNull FilterChain filterChain
+            ) throws IOException, jakarta.servlet.ServletException {
                 CsrfToken token = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
                 if (token != null) {
                     token.getToken();
@@ -120,12 +142,5 @@ public class SecurityConfig {
                 filterChain.doFilter(request, response);
             }
         };
-    }
-
-    @Bean
-    public MethodSecurityExpressionHandler methodSecurityExpressionHandler(AppPermissionEvaluator permissionEvaluator) {
-        var handler = new DefaultMethodSecurityExpressionHandler();
-        handler.setPermissionEvaluator(permissionEvaluator);
-        return handler;
     }
 }

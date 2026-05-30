@@ -31,10 +31,7 @@ public class AppUserRecord {
     @Column(nullable = false)
     private boolean active = true;
 
-    @Column(nullable = false)
-    private boolean mustChangePassword = false;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<UserIdentityRecord> identities = new ArrayList<>();
 
     @CreationTimestamp
@@ -101,14 +98,6 @@ public class AppUserRecord {
 
     public void setActive(boolean active) {
         this.active = active;
-    }
-
-    public boolean isMustChangePassword() {
-        return mustChangePassword;
-    }
-
-    public void setMustChangePassword(boolean v) {
-        this.mustChangePassword = v;
     }
 
     public Instant getCreatedAt() {

@@ -28,6 +28,7 @@ dependencies {
 	// Spring Boot dependencies
 	implementation(libs.spring.boot.starter.data.jpa)
 	implementation(libs.spring.boot.starter.security)
+	implementation(libs.spring.boot.starter.oauth2.client)
 	implementation(libs.spring.boot.starter.webmvc)
 	runtimeOnly(libs.h2)
 	runtimeOnly(libs.postgresql)

@@ -6,7 +6,8 @@ A Spring Boot backend for web-based aptamer bioinformatics analysis. This is a m
 
 SELEXTrace Backend reimplements the core functionality of the original AptaSuite platform for the web. It processes sequencing data from aptamer selection experiments, providing tools for sequence analysis, structural predictions, and experiment management.
 
-**Note**: This is an ongoing rewrite and does not yet have complete feature parity with the original AptaSuite application.
+> [!NOTE]  
+> This is an ongoing rewrite and does not yet have complete feature parity with the original AptaSuite application.
 
 ## Requirements
 
@@ -56,12 +57,35 @@ SELEXTrace Backend reimplements the core functionality of the original AptaSuite
 
 The server will start on `http://localhost:8080`.
 
+## Authentication
+
+The app supports email/password login out of the box. Sign in with Google is available as an optional provider and requires a Google Cloud OAuth client.
+
+1. Open the [Google Cloud Console](https://console.cloud.google.com/) and select or create a project.
+2. Navigate to **APIs & Services → Credentials** and click **Create Credentials → OAuth client ID**.
+3. Set the application type to **Web application** and add the following authorized redirect URI:
+
+   ```text
+   http://localhost:8080/login/oauth2/code/google
+   ```
+
+4. Add the generated credentials to your `.secrets.yml`:
+
+   ```yaml
+   GOOGLE_CLIENT_ID: your-client-id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET: your-client-secret
+   # Replace with your production frontend URL when deploying
+   FRONTEND_SUCCESS_URL: http://localhost:4200/auth/callback
+   FRONTEND_FAILURE_URL: http://localhost:4200/login
+   ```
+
 ## Configuration
 
 The main configuration file is located at `src/main/resources/application.yml`. Key settings include:
 
-- Maximum file upload size (default: 100MB)
+- Maximum file upload size (default: 10GB)
 - PostgreSQL datasource and JPA settings (via `.secrets.yml`)
+- Google OAuth settings (via `.secrets.yml`)
 
 ## Credits
 

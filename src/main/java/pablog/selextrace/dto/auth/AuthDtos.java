@@ -1,9 +1,11 @@
 package pablog.selextrace.dto.auth;
 
+import pablog.selextrace.model.auth.IdentityProvider;
 import pablog.selextrace.model.auth.ResourceAccessLevel;
 import pablog.selextrace.model.auth.SystemRole;
 
 import java.time.Instant;
+import java.util.List;
 
 public class AuthDtos {
 
@@ -29,6 +31,7 @@ public class AuthDtos {
             String username,
             SystemRole systemRole,
             boolean mustChangePassword,
+            List<IdentityProvider> linkedProviders,
             Instant createdAt
     ) {}
 
@@ -45,6 +48,7 @@ public class AuthDtos {
             SystemRole systemRole,
             boolean active,
             boolean mustChangePassword,
+            List<IdentityProvider> linkedProviders,
             Instant createdAt
     ) {}
 

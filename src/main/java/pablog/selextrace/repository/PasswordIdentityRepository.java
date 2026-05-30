@@ -11,4 +11,6 @@ public interface PasswordIdentityRepository extends JpaRepository<PasswordIdenti
     Optional<PasswordIdentityRecord> findByUser(AppUserRecord user);
 
     Optional<PasswordIdentityRecord> findByUser_Email(String email);
+
+    boolean existsByUser_Id(String userId);
 }
