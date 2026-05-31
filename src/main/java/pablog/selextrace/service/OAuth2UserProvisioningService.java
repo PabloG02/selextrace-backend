@@ -1,6 +1,8 @@
 package pablog.selextrace.service;
 
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -17,6 +19,8 @@ import java.util.UUID;
 
 @Service
 public class OAuth2UserProvisioningService {
+
+    private static final Logger log = LoggerFactory.getLogger(OAuth2UserProvisioningService.class);
 
     private final AppUserRepository userRepository;
     private final GoogleIdentityRepository googleIdentityRepository;
@@ -44,6 +48,8 @@ public class OAuth2UserProvisioningService {
         String email = normalizeEmail(oidcUser.getEmail());
         requireVerifiedEmail(oidcUser);
 
+        log.debug("Provisioning Google user: subject={}, email={}", subject, email);
+
         return googleIdentityRepository.findByProviderSubject(subject)
                 .map(this::resolveExistingIdentity)
                 .orElseGet(() -> linkOrCreateGoogleUser(oidcUser, subject, email));
@@ -56,6 +62,7 @@ public class OAuth2UserProvisioningService {
     private AppUserRecord resolveExistingIdentity(GoogleIdentityRecord identity) {
         AppUserRecord user = identity.getUser();
         assertActive(user);
+        log.debug("Resolved existing Google identity: subject={}, userId={}, email={}", identity.getProviderSubject(), user.getId(), user.getEmail());
         return user;
     }
 
@@ -66,8 +73,12 @@ public class OAuth2UserProvisioningService {
     /// @param email normalized email address
     /// @return the linked or newly created application user
     private AppUserRecord linkOrCreateGoogleUser(OidcUser oidcUser, String subject, String email) {
-        AppUserRecord user = userRepository.findByEmail(email)
-                .orElseGet(() -> createUser(oidcUser, email));
+        var existingUser = userRepository.findByEmail(email);
+        AppUserRecord user = existingUser.orElseGet(() -> {
+            AppUserRecord createdUser = createUser(oidcUser, email);
+            log.info("Created local account from Google login: userId={}, email={}, role={}", createdUser.getId(), email, createdUser.getSystemRole());
+            return createdUser;
+        });
         assertActive(user);
 
         GoogleIdentityRecord identity = new GoogleIdentityRecord();
@@ -75,6 +86,12 @@ public class OAuth2UserProvisioningService {
 
         user.addIdentity(identity);
         userRepository.save(user);
+
+        if (existingUser.isPresent()) {
+            log.info("Linked Google identity to existing account: userId={}, email={}", user.getId(), email);
+        }
+
+        log.debug("Persisted Google identity link: subject={}, userId={}, email={}", subject, user.getId(), email);
 
         return user;
     }
@@ -173,6 +190,7 @@ public class OAuth2UserProvisioningService {
     /// @param description human-readable error description
     /// @return authentication exception suitable for OAuth2 flows
     private OAuth2AuthenticationException oauthFailure(String code, String description) {
+        log.warn("Rejected Google login: code={}, description={}", code, description);
         return new OAuth2AuthenticationException(new OAuth2Error(code, description, null));
     }
 }

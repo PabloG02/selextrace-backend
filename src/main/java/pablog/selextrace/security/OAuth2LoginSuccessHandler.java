@@ -3,6 +3,8 @@ package pablog.selextrace.security;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,6 +26,8 @@ import java.io.IOException;
 
 @Component
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(OAuth2LoginSuccessHandler.class);
 
     private final OAuth2UserProvisioningService provisioningService;
     private final SecurityProperties securityProperties;
@@ -50,6 +54,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         }
 
         AppUserRecord user = provisioningService.provisionGoogleUser(oidcUser);
+        log.info("OAuth2 login succeeded: userId={}, email={}, role={}", user.getId(), user.getEmail(), user.getSystemRole());
         AuthenticatedUser principal = new AuthenticatedUser(
                 user.getId(),
                 user.getEmail(),
@@ -69,6 +74,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
 
+        log.debug("Saved OAuth2 security context and redirecting to frontend success URL");
         redirectStrategy.sendRedirect(request, response, securityProperties.frontendSuccessUrl().toString());
     }
 }

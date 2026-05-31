@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -43,6 +45,8 @@ import java.util.List;
 @EnableMethodSecurity
 @EnableConfigurationProperties(SecurityProperties.class)
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -97,6 +101,7 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable);
 
         if (clientRegistrationRepository.getIfAvailable() != null) {
+            log.info("OAuth2 client registrations detected — enabling oauth2Login");
             http.oauth2Login(oauth2 -> oauth2
                     .successHandler(oauth2LoginSuccessHandler)
                     .failureHandler(oauth2LoginFailureHandler)
@@ -108,6 +113,7 @@ public class SecurityConfig {
 
     @Bean
     CorsConfigurationSource corsConfigurationSource(SecurityProperties securityProperties) {
+        log.info("Configuring CORS — allowedOrigins={}", securityProperties.allowedOrigins());
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(securityProperties.allowedOrigins());
         configuration.setAllowCredentials(true);
@@ -129,6 +135,9 @@ public class SecurityConfig {
 
     private OncePerRequestFilter csrfCookieFilter() {
         return new OncePerRequestFilter() {
+
+            private static final Logger csrfLog = LoggerFactory.getLogger("pablog.selextrace.config.CsrfCookieFilter");
+
             @Override
             protected void doFilterInternal(
                     @NonNull HttpServletRequest request,
@@ -138,6 +147,9 @@ public class SecurityConfig {
                 CsrfToken token = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
                 if (token != null) {
                     token.getToken();
+                    csrfLog.trace("CSRF token loaded for request: method={}, uri={}", request.getMethod(), request.getRequestURI());
+                } else {
+                    csrfLog.trace("No CSRF token present for request: method={}, uri={}", request.getMethod(), request.getRequestURI());
                 }
                 filterChain.doFilter(request, response);
             }
