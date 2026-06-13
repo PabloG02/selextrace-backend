@@ -10,6 +10,9 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v6
@@ -30,9 +33,15 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: selextrace-backend-${{ github.sha }}
-          path: build/libs/*.jar
-          retention-days: 7
+      - name: Create release and upload JAR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Delete the existing "latest" release and its tag (ignore failure if it's the first run)
+          gh release delete latest --cleanup-tag -y || true
+          
+          # Create a new "latest" release pointing to the current commit and upload JARs
+          gh release create latest build/libs/*.jar \
+            --title "Latest build" \
+            --notes "Continuous build generated from commit ${{ github.sha }}" \
+            --prerelease
