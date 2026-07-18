@@ -11,6 +11,7 @@ import pablog.selextrace.model.persistence.AppUserRecord;
 import pablog.selextrace.model.persistence.ProjectMembershipRecord;
 import pablog.selextrace.model.persistence.ProjectRecord;
 import pablog.selextrace.repository.AppUserRepository;
+import pablog.selextrace.repository.ExperimentRecordRepository;
 import pablog.selextrace.repository.ProjectMembershipRepository;
 import pablog.selextrace.repository.ProjectRepository;
 
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
@@ -25,17 +27,20 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final ProjectMembershipRepository projectMembershipRepository;
+    private final ExperimentRecordRepository experimentRecordRepository;
     private final AppUserRepository userRepository;
     private final AuthorizationService authorizationService;
 
     public ProjectService(
             ProjectRepository projectRepository,
             ProjectMembershipRepository projectMembershipRepository,
+            ExperimentRecordRepository experimentRecordRepository,
             AppUserRepository userRepository,
             AuthorizationService authorizationService
     ) {
         this.projectRepository = projectRepository;
         this.projectMembershipRepository = projectMembershipRepository;
+        this.experimentRecordRepository = experimentRecordRepository;
         this.userRepository = userRepository;
         this.authorizationService = authorizationService;
     }
@@ -96,6 +101,19 @@ public class ProjectService {
         project.setDescription(blankToNull(request.description()));
         projectRepository.save(project);
         return getProject(currentUser, projectId);
+    }
+
+    @Transactional
+    public void deleteProject(Long projectId) {
+        ProjectRecord project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Project not found"));
+
+        if (experimentRecordRepository.existsByProject_Id(projectId)) {
+            throw new ResponseStatusException(CONFLICT, "Projects with experiments cannot be deleted");
+        }
+
+        projectMembershipRepository.deleteByProject_Id(projectId);
+        projectRepository.delete(project);
     }
 
     @Transactional

@@ -22,4 +22,6 @@ public interface ExperimentRecordRepository extends JpaRepository<ExperimentReco
 	@Modifying
 	@Query(value = "DELETE FROM experiment_records WHERE id = :id", nativeQuery = true)
 	void bulkDeleteById(Long id);
+
+	boolean existsByProject_Id(Long projectId);
 }

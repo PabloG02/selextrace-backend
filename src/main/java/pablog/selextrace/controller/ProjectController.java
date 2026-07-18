@@ -2,7 +2,6 @@ package pablog.selextrace.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -53,6 +52,13 @@ public class ProjectController {
             @PathVariable Long projectId,
             @RequestBody AuthDtos.ProjectRequest request) {
         return projectService.updateProject(currentUserService.requireUser(), projectId, request);
+    }
+
+    @DeleteMapping("/{projectId}")
+    @PreAuthorize("hasPermission(#projectId, 'project', 'manage')")
+    public ResponseEntity<Void> deleteProject(@PathVariable Long projectId) {
+        projectService.deleteProject(projectId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{projectId}/members")
