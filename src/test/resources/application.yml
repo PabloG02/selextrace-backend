@@ -7,3 +7,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+
+selextrace:
+  files:
+    upload-dir: "./build/test-data/files"
+  security:
+    frontend-success-url: "http://localhost:4200/auth/callback"
+    frontend-failure-url: "http://localhost:4200/login"
+    allowed-origins:
+      - "http://localhost:4200"
+      - "http://127.0.0.1:4200"
