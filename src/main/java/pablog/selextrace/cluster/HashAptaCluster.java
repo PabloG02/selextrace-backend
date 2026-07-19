@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import orestes.bloomfilter.BloomFilter;
 import orestes.bloomfilter.FilterBuilder;
 import pablog.selextrace.config.AptaClusterConfiguration;
+import pablog.selextrace.config.ExperimentConfiguration;
 import pablog.selextrace.domain.cluster.ClusterContainer;
 import pablog.selextrace.domain.experiment.Experiment;
 import pablog.selextrace.domain.experiment.SelectionCycle;
@@ -86,7 +87,7 @@ public class HashAptaCluster implements AptaCluster {
         this.editDistance = config.editDistance();
         this.kmerSize = config.kmerSize();
         this.kmerCutoffIterations = config.kmerCutoffIterations();
-        this.maxNumberOfCores = 12; // TODO: MAKE THIS A PARAMETER
+        this.maxNumberOfCores = new ExperimentConfiguration.PerformanceConfig().maxNumberOfCores;
         this.experiment = experiment;
         this.clusters = clusters;
 
